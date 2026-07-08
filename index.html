@@ -2,1620 +2,1537 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>🎯 智能选号助手</title>
-<script>
-// ==================== 密码保护（修复版）====================
-(function() {
-  const PASSWORD = '123456';
-  const STORAGE_KEY = 'lottery_auth';
-  // 页面加载时立即检查
-  if (sessionStorage.getItem(STORAGE_KEY) === 'ok') return;
-
-  // 创建全屏遮罩
-  const overlay = document.createElement('div');
-  overlay.id = 'password-overlay';
-  overlay.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:linear-gradient(135deg,#0a0e27,#111640);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:-apple-system,sans-serif;padding:20px;box-sizing:border-box;';
-
-  const icon = document.createElement('div');
-  icon.textContent = '🔒';
-  icon.style.cssText = 'font-size:70px;margin-bottom:24px;animation:pulse 2s infinite;';
-
-  const title = document.createElement('div');
-  title.textContent = '智能选号助手';
-  title.style.cssText = 'color:#ff6b35;font-size:26px;font-weight:bold;margin-bottom:6px;';
-
-  const sub = document.createElement('div');
-  sub.textContent = '请输入访问密码以继续';
-  sub.style.cssText = 'color:#888;font-size:14px;margin-bottom:28px;';
-
-  const input = document.createElement('input');
-  input.type = 'password';
-  input.placeholder = '请输入密码';
-  input.style.cssText = 'width:280px;padding:14px 18px;border-radius:12px;border:2px solid #2a3580;background:#0d1234;color:#fff;font-size:16px;text-align:center;margin-bottom:14px;outline:none;transition:border-color 0.3s;';
-  input.addEventListener('focus', () => { input.style.borderColor = '#ff6b35'; input.style.boxShadow = '0 0 15px rgba(255,107,53,0.3)'; });
-  input.addEventListener('blur', () => { input.style.borderColor = '#2a3580'; input.style.boxShadow = 'none'; });
-
-  const btn = document.createElement('button');
-  btn.textContent = '解锁进入';
-  btn.style.cssText = 'width:280px;padding:14px;border:none;border-radius:12px;background:linear-gradient(135deg,#ff6b35,#ff3c00);color:#fff;font-size:16px;font-weight:bold;cursor:pointer;transition:all 0.2s;';
-  btn.addEventListener('mouseenter', () => btn.style.transform = 'scale(1.03)');
-  btn.addEventListener('mouseleave', () => btn.style.transform = 'scale(1)');
-
-  const errMsg = document.createElement('div');
-  errMsg.style.cssText = 'color:#ff1744;font-size:13px;margin-top:12px;min-height:20px;text-align:center;';
-
-  // 底部提示
-  const hint = document.createElement('div');
-  hint.textContent = '默认密码为 123456，可在设置中修改';
-  hint.style.cssText = 'color:#444;font-size:11px;margin-top:30px;';
-
-  let attempts = 0;
-  const checkPwd = () => {
-    if (input.value === PASSWORD) {
-      sessionStorage.setItem(STORAGE_KEY, 'ok');
-      overlay.style.display = 'none';
-      document.body.style.overflow = '';
-    } else {
-      attempts++;
-      errMsg.textContent = '密码错误，请重新输入' + (attempts >= 3 ? '（已锁定60秒）' : '');
-      input.value = '';
-      input.style.borderColor = '#ff1744';
-      input.style.animation = 'shake 0.4s';
-      if (attempts >= 3) {
-        btn.disabled = true;
-        btn.style.opacity = '0.4';
-        input.disabled = true;
-        setTimeout(() => { btn.disabled = false; btn.style.opacity = '1'; input.disabled = false; attempts = 0; errMsg.textContent = ''; }, 60000);
-      }
-      setTimeout(() => { input.style.animation = ''; }, 400);
-    }
-  };
-  btn.addEventListener('click', checkPwd);
-  input.addEventListener('keydown', (e) => { if (e.key === 'Enter') checkPwd(); });
-
-  const style = document.createElement('style');
-  style.textContent = '@keyframes shake{0%,100%{transform:translateX(0)};10%,30%,50%,70%,90%{transform:translateX(-6px)};20%,40%,60%,80%{transform:translateX(6px)}}@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.6}}';
-  document.head.appendChild(style);
-
-  overlay.appendChild(icon);
-  overlay.appendChild(title);
-  overlay.appendChild(sub);
-  overlay.appendChild(input);
-  overlay.appendChild(btn);
-  overlay.appendChild(errMsg);
-  overlay.appendChild(hint);
-
-  document.body.appendChild(overlay);
-  document.body.style.overflow = 'hidden';
-  document.body.style.height = '100vh';
-  setTimeout(() => input.focus(), 200);
-})();
-</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>智能选号助手 v4</title>
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; background: #0a0e27; color: #e0e0e0; font-size: 14px; max-width: 100vw; overflow-x: hidden; }
-::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-thumb { background: #444; border-radius: 2px; }
-
-/* Tab Bar */
-.tab-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #111640; display: flex; border-top: 1px solid #222; z-index: 100; padding-bottom: env(safe-area-inset-bottom, 0px); }
-.tab-bar button { flex: 1; padding: 10px 0; background: none; border: none; color: #888; font-size: 11px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; }
-.tab-bar button.active { color: #ff6b35; }
-.tab-bar button .icon { font-size: 20px; }
-
-/* Pages */
-.page { display: none; padding: 12px; padding-bottom: 80px; min-height: 100vh; }
-.page.active { display: block; }
-
-/* Header */
-.header { text-align: center; padding: 15px 0 10px; }
-.header h1 { font-size: 20px; color: #ff6b35; }
-.header .sub { font-size: 12px; color: #666; margin-top: 4px; }
-
-/* Cards */
-.card { background: #141b4a; border-radius: 12px; padding: 15px; margin-bottom: 12px; border: 1px solid #1e2760; }
-.card h3 { color: #ff6b35; margin-bottom: 10px; font-size: 15px; display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
-.card h4 { color: #7c8bff; margin: 10px 0 6px; font-size: 13px; }
-
-/* Buttons */
-.btn { display: inline-block; padding: 10px 18px; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: 600; transition: all 0.2s; }
-.btn-primary { background: linear-gradient(135deg, #ff6b35, #ff3c00); color: #fff; }
-.btn-primary:active { transform: scale(0.96); }
-.btn-secondary { background: #1e2760; color: #7c8bff; border: 1px solid #2a3580; }
-.btn-secondary:active { background: #2a3580; }
-.btn-success { background: linear-gradient(135deg, #00c853, #009624); color: #fff; }
-.btn-danger { background: linear-gradient(135deg, #ff1744, #d50000); color: #fff; }
-.btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-input[type=text], input[type=number], textarea {
-  width: 100%; padding: 10px 12px; border-radius: 8px;
-  border: 1px solid #2a3580; background: #0d1234; color: #fff; font-size: 14px; margin-bottom: 8px;
-  font-family: inherit;
-}
-input:focus, textarea:focus { outline: none; border-color: #ff6b35; }
-label { display: block; color: #aaa; font-size: 12px; margin-bottom: 4px; }
-
-/* Ball styles */
-.ball-sm { display: inline-block; width: 32px; height: 32px; line-height: 32px; border-radius: 50%; text-align: center; font-weight: bold; font-size: 13px; margin: 2px; }
-.ball-red { background: linear-gradient(135deg, #ff4444, #cc0000); color: #fff; }
-.ball-blue { background: linear-gradient(135deg, #2196F3, #0D47A1); color: #fff; }
-.ball-green { background: linear-gradient(135deg, #4CAF50, #2E7D32); color: #fff; }
-.ball-gray { background: #333; color: #888; }
-.ball-hit { box-shadow: 0 0 10px 3px #ff0, 0 0 20px 5px #f80; transform: scale(1.15); }
-
-.stat-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-.stat-table th { background: #1a2255; color: #7c8bff; padding: 6px 4px; text-align: center; }
-.stat-table td { padding: 5px 4px; text-align: center; border-bottom: 1px solid #1a2255; }
-.stat-table tr:nth-child(even) { background: #111540; }
-
-.rec-card { background: linear-gradient(135deg, #1a1f50, #141b4a); border: 1px solid #2a3580; border-radius: 10px; padding: 12px; margin: 8px 0; }
-.rec-card .group-title { color: #ff6b35; font-weight: bold; margin-bottom: 6px; }
-.rec-card .balls { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0; }
-.rec-card .detail { font-size: 11px; color: #888; line-height: 1.6; }
-
-.toast { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); background: rgba(0,0,0,0.88); color: #fff; padding: 14px 28px; border-radius: 12px; font-size: 14px; z-index: 9999; display: none; pointer-events: none; white-space: nowrap; }
-.toast.show { display: block; animation: fadeIn 0.3s; }
-
-.spinner { display: inline-block; width: 16px; height: 16px; border: 3px solid #333; border-top-color: #ff6b35; border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-right: 6px; }
-@keyframes spin { to { transform: rotate(360deg); } }
-@keyframes fadeIn { from { opacity: 0; transform: translate(-50%,-50%) scale(0.9); } to { opacity: 1; transform: translate(-50%,-50%) scale(1); } }
-
-.section-toggle { cursor: pointer; user-select: none; }
-.section-toggle::before { content: "▼ "; font-size: 10px; color: #ff6b35; }
-.section-toggle.collapsed::before { content: "▶ "; }
-.collapsible { overflow: hidden; transition: max-height 0.3s; }
-.collapsible.collapsed { max-height: 0 !important; }
-
-.tag { display: inline-block; padding: 1px 6px; border-radius: 4px; font-size: 10px; margin-left: 4px; }
-.tag-hot { background: #ff4444; color: #fff; }
-.tag-warm { background: #ff9800; color: #fff; }
-.tag-cold { background: #2196F3; color: #fff; }
-.tag-miss { background: #9c27b0; color: #fff; }
-
-.empty-state { text-align: center; padding: 30px; color: #555; }
-.empty-state .icon { font-size: 40px; margin-bottom: 10px; }
-
-.period-selector { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
-.period-selector button { padding: 6px 12px; border-radius: 6px; border: 1px solid #2a3580; background: #0d1234; color: #aaa; font-size: 12px; cursor: pointer; }
-.period-selector button.active { background: #ff6b35; color: #fff; border-color: #ff6b35; }
-
-.source-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; }
-.source-badge.api { background: #1a3a1a; color: #4CAF50; }
-.source-badge.manual { background: #3a2a1a; color: #ff9800; }
-.source-badge.batch { background: #1a2a3a; color: #7c8bff; }
-.source-badge.ocr { background: #3a1a3a; color: #ce93d8; }
-
-/* Import area */
-.import-area { border: 2px dashed #2a3580; border-radius: 10px; padding: 20px; text-align: center; margin: 10px 0; cursor: pointer; transition: all 0.3s; }
-.import-area:hover, .import-area.dragover { border-color: #ff6b35; background: rgba(255,107,53,0.05); }
-.import-area .icon { font-size: 36px; margin-bottom: 8px; }
-.import-area .text { color: #888; font-size: 13px; }
-.import-area .hint { color: #555; font-size: 11px; margin-top: 6px; }
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;background:linear-gradient(135deg,#0a0e27 0%,#1a1a3e 50%,#0d1137 100%);color:#e0e0e0;min-height:100vh;padding-bottom:80px}
+.container{max-width:480px;margin:0 auto;padding:15px}
+h1{text-align:center;font-size:20px;background:linear-gradient(90deg,#00d2ff,#3a7bd5);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:15px;padding-top:10px}
+h2{font-size:15px;color:#00d2ff;margin:12px 0 8px;border-left:3px solid #00d2ff;padding-left:8px}
+.tab-bar{display:flex;overflow-x:auto;gap:0;margin-bottom:12px;border-radius:10px;background:rgba(255,255,255,0.05);padding:3px}
+.tab-bar button{flex:1;padding:8px 5px;font-size:12px;border:none;background:transparent;color:#888;cursor:pointer;white-space:nowrap;border-radius:8px;transition:all .2s}
+.tab-bar button.active{background:linear-gradient(135deg,#00d2ff,#3a7bd5);color:#fff;font-weight:bold}
+.tab-content{display:none}
+.tab-content.active{display:block}
+.card{background:rgba(255,255,255,0.06);border-radius:12px;padding:14px;margin-bottom:10px;border:1px solid rgba(255,255,255,0.08)}
+.btn{display:inline-block;padding:10px 16px;font-size:14px;border:none;border-radius:8px;cursor:pointer;font-weight:bold;transition:all .2s;margin:4px 2px}
+.btn:active{transform:scale(0.96)}
+.btn-primary{background:linear-gradient(135deg,#00d2ff,#3a7bd5);color:#fff}
+.btn-success{background:linear-gradient(135deg,#00b09b,#96c93d);color:#fff}
+.btn-warning{background:linear-gradient(135deg,#f7971e,#ffd200);color:#333}
+.btn-danger{background:linear-gradient(135deg,#ff416c,#ff4b2b);color:#fff}
+.btn-info{background:linear-gradient(135deg,#8e2de2,#4a00e0);color:#fff}
+.btn-secondary{background:rgba(255,255,255,0.1);color:#ccc;border:1px solid rgba(255,255,255,0.2)}
+input,textarea,select{width:100%;padding:10px;margin:5px 0;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:rgba(0,0,0,0.3);color:#fff;font-size:14px}
+input:focus,textarea:focus,select:focus{outline:none;border-color:#00d2ff}
+label{font-size:13px;color:#aaa;display:block;margin-top:6px}
+.tag{display:inline-block;padding:2px 8px;font-size:11px;border-radius:10px;margin:2px}
+.tag-hot{background:#ff4444;color:#fff}
+.tag-warm{background:#ff8c00;color:#fff}
+.tag-cold{background:#3498db;color:#fff}
+.tag-normal{background:rgba(255,255,255,0.15);color:#ccc}
+table{width:100%;border-collapse:collapse;font-size:12px;margin:8px 0}
+th,td{padding:6px 4px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.08)}
+th{color:#00d2ff;font-weight:bold;font-size:11px}
+tr:hover{background:rgba(255,255,255,0.03)}
+.num-ball{display:inline-block;width:28px;height:28px;line-height:28px;text-align:center;border-radius:50%;font-size:13px;font-weight:bold;margin:1px;color:#fff}
+.num-ball.red{background:radial-gradient(circle at 30% 30%,#ff6b6b,#c0392b)}
+.num-ball.blue{background:radial-gradient(circle at 30% 30%,#74b9ff,#0984e3)}
+.num-ball.green{background:radial-gradient(circle at 30% 30%,#55efc4,#00b894)}
+.num-ball.purple{background:radial-gradient(circle at 30% 30%,#a29bfe,#6c5ce7)}
+.num-ball.gold{background:radial-gradient(circle at 30% 30%,#ffeaa7,#fdcb6e);color:#333}
+.num-ball.hit{box-shadow:0 0 10px #ff0,0 0 20px #ff0;transform:scale(1.15)}
+.alert{background:rgba(255,65,108,0.15);border:1px solid rgba(255,65,108,0.3);padding:10px;border-radius:8px;margin:8px 0;font-size:13px}
+.success{background:rgba(0,176,155,0.15);border:1px solid rgba(0,176,155,0.3)}
+.info{background:rgba(0,210,255,0.08);border:1px solid rgba(0,210,255,0.2)}
+.progress{height:6px;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden;margin:8px 0}
+.progress-bar{height:100%;background:linear-gradient(90deg,#00d2ff,#3a7bd5);border-radius:3px;transition:width .3s}
+.modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:100;justify-content:center;align-items:center}
+.modal-overlay.active{display:flex}
+.modal{background:#1a1a3e;border-radius:16px;padding:24px;max-width:400px;width:90%;text-align:center;border:1px solid rgba(255,255,255,0.1)}
+.modal h3{color:#00d2ff;margin-bottom:12px}
+.modal input{text-align:center;font-size:18px;letter-spacing:4px}
+.modal .btn{margin:8px 4px}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:rgba(10,14,39,0.95);backdrop-filter:blur(10px);display:flex;z-index:50;border-top:1px solid rgba(255,255,255,0.1)}
+.bottom-nav button{flex:1;padding:10px 2px;font-size:11px;border:none;background:transparent;color:#666;cursor:pointer;text-align:center}
+.bottom-nav button.active{color:#00d2ff}
+.bottom-nav .nav-icon{font-size:18px;display:block;margin-bottom:2px}
+.upload-area{border:2px dashed rgba(255,255,255,0.15);border-radius:12px;padding:20px;text-align:center;margin:10px 0;cursor:pointer;transition:all .2s}
+.upload-area:hover{border-color:#00d2ff;background:rgba(0,210,255,0.03)}
+.upload-area.dragover{border-color:#00d2ff;background:rgba(0,210,255,0.08)}
+.section-title{font-size:13px;color:#888;margin:10px 0 5px;text-transform:uppercase;letter-spacing:1px}
+.confirm-banner{background:linear-gradient(135deg,rgba(0,176,155,0.2),rgba(150,201,61,0.1));border:1px solid rgba(0,176,155,0.3);border-radius:10px;padding:12px;margin:10px 0;text-align:center}
+.confirm-banner .btn{margin-top:8px}
+.empty-state{text-align:center;padding:30px;color:#555}
+.empty-state .empty-icon{font-size:40px;margin-bottom:10px}
 </style>
 </head>
 <body>
 
-<div class="header">
-  <h1>🎯 智能选号助手</h1>
-  <div class="sub">大乐透 + 双色球 · 9维数据分析 · 每日5注推荐</div>
+<div id="passwordOverlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,#0a0e27,#1a1a3e);z-index:200;display:flex;justify-content:center;align-items:center;flex-direction:column">
+<div style="text-align:center;padding:30px">
+<div style="font-size:50px;margin-bottom:15px">🔒</div>
+<h2 style="color:#00d2ff;margin-bottom:10px">智能选号助手</h2>
+<p style="color:#888;margin-bottom:20px;font-size:13px">请输入访问密码</p>
+<input type="password" id="pwdInput" placeholder="请输入密码" style="width:250px;text-align:center;font-size:18px;letter-spacing:4px;padding:12px;border-radius:10px;border:1px solid rgba(0,210,255,0.3);background:rgba(0,0,0,0.4);color:#fff;margin-bottom:15px" autofocus>
+<br>
+<button id="pwdBtn" class="btn btn-primary" style="width:250px;padding:12px;font-size:16px">🔓 解锁</button>
+<p id="pwdError" style="color:#ff416c;margin-top:10px;font-size:12px;display:none">密码错误，请重试</p>
+<p id="pwdSet" style="color:#00d2ff;margin-top:10px;font-size:12px;display:none">首次使用，请设置密码</p>
+</div>
 </div>
 
-<div class="tab-bar">
-  <button class="tab-btn active" data-tab="dlt"><span class="icon">🎱</span>大乐透</button>
-  <button class="tab-btn" data-tab="ssq"><span class="icon">🔴</span>双色球</button>
-  <button class="tab-btn" data-tab="import"><span class="icon">📥</span>批量导入</button>
-  <button class="tab-btn" data-tab="check"><span class="icon">✅</span>开奖核对</button>
-  <button class="tab-btn" data-tab="about"><span class="icon">❓</span>说明</button>
+<div class="container" id="mainApp" style="display:none">
+<div style="text-align:center;margin-bottom:5px">
+<h1>🎯 智能选号助手 v4</h1>
+<p style="font-size:11px;color:#555">尾数分析引擎 · 数据持久化 · 智能推荐</p>
 </div>
 
-<!-- ==================== 大乐透页面 ==================== -->
-<div id="page-dlt" class="page active">
-  <div class="card">
-    <h3>📥 添加大乐透开奖号 <span class="source-badge api">半自动联网</span></h3>
-    <button class="btn btn-success" onclick="fetchLatestDLT()" style="width:100%;margin-bottom:8px;">
-      <span id="dlt-fetch-loading" style="display:none;"><span class="spinner"></span></span>
-      🌐 一键获取最新开奖号
-    </button>
-    <div style="text-align:center;color:#666;font-size:12px;margin:6px 0;">— 或手动输入 —</div>
-    <label>期号（如 26076）</label>
-    <input type="text" id="dlt-period" placeholder="期号">
-    <label>前区号码（5个，空格分隔，如：01 06 16 18 26）</label>
-    <input type="text" id="dlt-front" placeholder="01 06 16 18 26">
-    <label>后区号码（2个，空格分隔，如：04 10）</label>
-    <input type="text" id="dlt-back" placeholder="04 10">
-    <button class="btn btn-primary" onclick="addDLT()" style="width:100%;">➕ 添加开奖记录</button>
-  </div>
-  <div class="card">
-    <h3 class="section-toggle" onclick="toggleSection(this)">📋 近50期历史记录 <span id="dlt-count" style="color:#ff6b35;font-size:12px;"></span></h3>
-    <div class="collapsible" id="dlt-history-wrap">
-      <div id="dlt-history" class="empty-state"><div class="icon">📭</div>暂无数据，请先添加开奖号</div>
-    </div>
-  </div>
-  <div class="card">
-    <h3 class="section-toggle" onclick="toggleSection(this)">📊 9维数据分析</h3>
-    <div class="collapsible" id="dlt-analysis-wrap">
-      <div id="dlt-analysis" class="empty-state"><div class="icon">📊</div>数据不足，至少需5期以上</div>
-    </div>
-  </div>
-  <div class="card">
-    <h3>🎯 智能推荐 5 注</h3>
-    <button class="btn btn-success" onclick="genDLT()" style="width:100%;margin-bottom:10px;">🚀 生成5注大乐透号码</button>
-    <div id="dlt-recommend" class="empty-state"><div class="icon">🎲</div>点击上方按钮生成推荐</div>
-  </div>
+<div class="tab-bar" id="mainTabBar">
+<button class="active" onclick="switchMainTab('dlt')">🎰 大乐透</button>
+<button onclick="switchMainTab('ssq')">🎱 双色球</button>
 </div>
 
-<!-- ==================== 双色球页面 ==================== -->
-<div id="page-ssq" class="page">
-  <div class="card">
-    <h3>📥 添加双色球开奖号 <span class="source-badge api">半自动联网</span></h3>
-    <button class="btn btn-success" onclick="fetchLatestSSQ()" style="width:100%;margin-bottom:8px;">
-      <span id="ssq-fetch-loading" style="display:none;"><span class="spinner"></span></span>
-      🌐 一键获取最新开奖号
-    </button>
-    <div style="text-align:center;color:#666;font-size:12px;margin:6px 0;">— 或手动输入 —</div>
-    <label>期号（如 2026075）</label>
-    <input type="text" id="ssq-period" placeholder="期号">
-    <label>红球号码（6个，空格分隔，如：01 03 19 20 24 25）</label>
-    <input type="text" id="ssq-red" placeholder="01 03 19 20 24 25">
-    <label>蓝球号码（1个，如：07）</label>
-    <input type="text" id="ssq-blue" placeholder="07">
-    <button class="btn btn-primary" onclick="addSSQ()" style="width:100%;">➕ 添加开奖记录</button>
-  </div>
-  <div class="card">
-    <h3 class="section-toggle" onclick="toggleSection(this)">📋 近50期历史记录 <span id="ssq-count" style="color:#ff6b35;font-size:12px;"></span></h3>
-    <div class="collapsible" id="ssq-history-wrap">
-      <div id="ssq-history" class="empty-state"><div class="icon">📭</div>暂无数据，请先添加开奖号</div>
-    </div>
-  </div>
-  <div class="card">
-    <h3 class="section-toggle" onclick="toggleSection(this)">📊 9维数据分析</h3>
-    <div class="collapsible" id="ssq-analysis-wrap">
-      <div id="ssq-analysis" class="empty-state"><div class="icon">📊</div>数据不足，至少需5期以上</div>
-    </div>
-  </div>
-  <div class="card">
-    <h3>🎯 智能推荐 5 注</h3>
-    <button class="btn btn-success" onclick="genSSQ()" style="width:100%;margin-bottom:10px;">🚀 生成5注双色球号码</button>
-    <div id="ssq-recommend" class="empty-state"><div class="icon">🎲</div>点击上方按钮生成推荐</div>
-  </div>
+<!-- 大乐透 -->
+<div id="tab-dlt" class="tab-content active">
+<div class="card">
+<h2>📥 数据录入</h2>
+<div class="tab-bar" style="margin-bottom:10px">
+<button class="active" onclick="switchInputTab('dlt','manual')">✏️ 手动输入</button>
+<button onclick="switchInputTab('dlt','batch')">📋 批量导入</button>
+<button onclick="switchInputTab('dlt','fetch')">🌐 联网获取</button>
+</div>
+<div id="dlt-manual" class="input-tab active">
+<label>期号</label><input type="text" id="dlt-issue" placeholder="如 25076">
+<label>前区（5个，01-35，空格分隔）</label><input type="text" id="dlt-front" placeholder="如 03 12 18 25 31">
+<label>后区（2个，01-12，空格分隔）</label><input type="text" id="dlt-back" placeholder="如 04 09">
+<div style="margin-top:8px">
+<button class="btn btn-primary" onclick="addDLTRecord()">➕ 添加开奖记录</button>
+</div>
+</div>
+<div id="dlt-batch" class="input-tab">
+<div class="upload-area" id="dlt-upload-area" onclick="document.getElementById('dlt-file').click()" ondrop="handleDrop(event,'dlt')" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+<div style="font-size:30px;margin-bottom:8px">📂</div>
+<p style="font-size:13px;color:#888">点击或拖拽上传文件</p>
+<p style="font-size:11px;color:#555">支持 TXT / CSV / XLSX</p>
+<input type="file" id="dlt-file" style="display:none" onchange="handleFileUpload(event,'dlt')" accept=".txt,.csv,.xlsx,.xls">
+</div>
+<div style="margin-top:8px">
+<label>或直接粘贴（每行一期：期号 号码）</label>
+<textarea id="dlt-paste" rows="6" placeholder="25076 03 12 18 25 31 04 09&#10;25075 07 15 22 28 35 02 11&#10;..."></textarea>
+<button class="btn btn-primary" onclick="parsePastedData('dlt')">📥 解析并导入</button>
+</div>
+</div>
+<div id="dlt-fetch" class="input-tab">
+<button class="btn btn-info" onclick="fetchDLT()">🌐 一键获取最新开奖号</button>
+<div id="dlt-fetch-result" style="margin-top:8px"></div>
+</div>
 </div>
 
-<!-- ==================== 批量导入页面 ==================== -->
-<div id="page-import" class="page">
-  <!-- 导入说明 -->
-  <div class="card">
-    <h3>📥 批量导入开奖数据</h3>
-    <p style="color:#aaa;font-size:12px;line-height:1.8;margin-bottom:12px;">
-      支持以下方式一次性导入多期开奖数据，无需一期一期手动输入。
-    </p>
-  </div>
-
-  <!-- 方式1：文本粘贴 -->
-  <div class="card">
-    <h3>📋 方式一：粘贴文本数据</h3>
-    <label>选择彩票类型</label>
-    <div class="period-selector" id="import-type-sel">
-      <button class="active" onclick="setImportType('dlt',this)">大乐透</button>
-      <button onclick="setImportType('ssq',this)">双色球</button>
-    </div>
-    <label>粘贴开奖数据（每行一期，格式见下方提示）</label>
-    <textarea id="batch-text" rows="8" placeholder="26076 01 06 16 18 26 04 10
-26075 03 12 20 25 33 07 11
-26074 05 09 14 22 30 02 08
-..."></textarea>
-    <div style="color:#666;font-size:11px;margin-bottom:10px;line-height:1.6;">
-      <b>格式说明：</b><br>
-      • <b>大乐透</b>：期号 前区5个号码 后区2个号码（空格/逗号分隔均可）<br>
-      • <b>双色球</b>：期号 红球6个号码 蓝球1个号码（空格/逗号分隔均可）<br>
-      • 每行一期，支持一次性粘贴50期以上
-    </div>
-    <button class="btn btn-success" onclick="batchImportText()" style="width:100%;">📥 批量导入文本数据</button>
-  </div>
-
-  <!-- 方式2：文件上传 -->
-  <div class="card">
-    <h3>📄 方式二：上传文件（TXT / CSV / XLSX）</h3>
-    <label>选择彩票类型</label>
-    <div class="period-selector" id="import-file-type-sel">
-      <button class="active" onclick="setImportFileType('dlt',this)">大乐透</button>
-      <button onclick="setImportFileType('ssq',this)">双色球</button>
-    </div>
-    <div class="import-area" id="file-drop-area" onclick="document.getElementById('batch-file').click()">
-      <div class="icon">📁</div>
-      <div class="text">点击选择文件，或拖拽文件到此处</div>
-      <div class="hint">支持 .txt / .csv / .xlsx 格式</div>
-    </div>
-    <input type="file" id="batch-file" accept=".txt,.csv,.xlsx,.xls" style="display:none;" onchange="batchImportFile(event)">
-    <div style="color:#666;font-size:11px;margin:10px 0;line-height:1.6;">
-      <b>文件格式要求：</b><br>
-      • <b>TXT/CSV</b>：每行一期，期号+号码，空格或逗号分隔<br>
-      • <b>XLSX</b>：第一列期号，后续列分别为前区/红球号码和后区/蓝球号码<br>
-      • 系统会自动识别列数和格式
-    </div>
-  </div>
-
-  <!-- 方式3：截图识别 -->
-  <div class="card">
-    <h3>📸 方式三：截图识别（实验性）</h3>
-    <label>选择彩票类型</label>
-    <div class="period-selector" id="import-ocr-type-sel">
-      <button class="active" onclick="setImportOCRType('dlt',this)">大乐透</button>
-      <button onclick="setImportOCRType('ssq',this)">双色球</button>
-    </div>
-    <div class="import-area" id="ocr-drop-area" onclick="document.getElementById('ocr-file').click()">
-      <div class="icon">🖼️</div>
-      <div class="text">点击选择开奖截图，或拖拽图片到此处</div>
-      <div class="hint">支持从官网/App截取的開奖公告图片</div>
-    </div>
-    <input type="file" id="ocr-file" accept="image/*" style="display:none;" onchange="batchOCR(event)">
-    <div style="color:#666;font-size:11px;margin:10px 0;line-height:1.6;">
-      <b>使用说明：</b><br>
-      • 截取中国福利彩票官网或App中的开奖公告<br>
-      • 确保图片中号码清晰可见<br>
-      • 可一次选多张截图，系统逐一识别<br>
-      • 识别后可手动修正确认
-    </div>
-    <div id="ocr-preview" style="margin-top:10px;"></div>
-  </div>
-
-  <!-- 导入结果 -->
-  <div class="card" id="import-result-card" style="display:none;">
-    <h3>✅ 导入结果</h3>
-    <div id="import-result-content"></div>
-  </div>
+<div class="card">
+<h2>📊 9维数据分析 + 尾数分析</h2>
+<button class="btn btn-secondary" onclick="analyzeDLT()" id="dlt-analyze-btn">🔍 开始分析</button>
+<div id="dlt-analysis" style="margin-top:10px"></div>
 </div>
 
-<!-- ==================== 开奖核对页面 ==================== -->
-<div id="page-check" class="page">
-  <div class="card">
-    <h3>🔍 大乐透 · 开奖核对</h3>
-    <label>开奖前区（5个号码，空格分隔）</label>
-    <input type="text" id="check-dlt-front" placeholder="01 06 16 18 26">
-    <label>开奖后区（2个号码，空格分隔）</label>
-    <input type="text" id="check-dlt-back" placeholder="04 10">
-    <button class="btn btn-primary" onclick="checkDLT()" style="width:100%;">🔍 开始核对</button>
-    <div id="check-dlt-result" style="margin-top:10px;"></div>
-  </div>
-  <div class="card">
-    <h3>🔍 双色球 · 开奖核对</h3>
-    <label>开奖红球（6个号码，空格分隔）</label>
-    <input type="text" id="check-ssq-red" placeholder="01 03 19 20 24 25">
-    <label>开奖蓝球（1个号码）</label>
-    <input type="text" id="check-ssq-blue" placeholder="07">
-    <button class="btn btn-primary" onclick="checkSSQ()" style="width:100%;">🔍 开始核对</button>
-    <div id="check-ssq-result" style="margin-top:10px;"></div>
-  </div>
+<div class="card">
+<h2>🎯 智能推荐 5 注</h2>
+<button class="btn btn-success" onclick="genDLT()" id="dlt-gen-btn">🚀 生成 5 注推荐</button>
+<div id="dlt-recommend" style="margin-top:10px"></div>
+<div id="dlt-confirm" style="margin-top:10px;display:none" class="confirm-banner">
+<p style="font-size:13px;color:#96c93d">✅ 5 注推荐已生成，确认保存？</p>
+<button class="btn btn-success" onclick="confirmDLT()">✅ 确认保存这 5 注</button>
+<button class="btn btn-warning" onclick="regenerateDLT()">🔄 重新生成</button>
+</div>
 </div>
 
-<!-- ==================== 说明页面 ==================== -->
-<div id="page-about" class="page">
-  <div class="card">
-    <h3>📖 使用说明</h3>
-    <h4>🔐 密码保护</h4>
-    <p style="color:#aaa;font-size:12px;line-height:1.8;">
-      默认密码为 <b style="color:#ff6b35;">123456</b>，每次打开需输入密码。<br>
-      连续输错3次将锁定60秒。
-    </p>
-    <h4>🌐 半自动联网功能</h4>
-    <p style="color:#aaa;font-size:12px;line-height:1.8;">
-      点击「一键获取最新开奖号」按钮，程序将自动从多个官方API源获取数据。<br>
-      如果所有API均失败，可使用「批量导入」功能手动录入。
-    </p>
-    <h4>📥 批量导入（新功能）</h4>
-    <p style="color:#aaa;font-size:12px;line-height:1.8;">
-      <b>文本粘贴</b>：直接粘贴期号和号码，支持大乐透和双色球。<br>
-      <b>文件上传</b>：支持 .txt / .csv / .xlsx 格式文件。<br>
-      <b>截图识别</b>：上传开奖截图，自动识别号码（需浏览器支持OCR）。
-    </p>
-    <h4>📊 9维数据分析</h4>
-    <ul style="color:#aaa;font-size:12px;line-height:1.8;padding-left:20px;">
-      <li>热冷号统计（近50期出现频次）</li>
-      <li>遗漏值计算（号码未出现期数）</li>
-      <li>和值分析（前区号码总和的黄金区间）</li>
-      <li>奇偶比（奇数:偶数比例）</li>
-      <li>大小比（小号:大号比例）</li>
-      <li>三区均衡（号码在三个区间的分布）</li>
-      <li>跨度分析（最大号-最小号）</li>
-      <li>连号检测（连续号码出现情况）</li>
-      <li>重号追踪（与上期相同号码）</li>
-    </ul>
-    <h4>🎯 推荐逻辑</h4>
-    <p style="color:#aaa;font-size:12px;line-height:1.8;">
-      基于以上9维分析结果，综合热冷号、遗漏回补、形态平衡等因素，<br>
-      通过加权随机算法生成5注号码，每注均满足核心形态约束。
-    </p>
-    <h4>💾 数据存储</h4>
-    <p style="color:#aaa;font-size:12px;line-height:1.8;">
-      所有数据保存在手机本地（LocalStorage），关闭浏览器后不会丢失。<br>
-      清除浏览器缓存会清空数据，建议定期导出备份。
-    </p>
-    <h4>⚠️ 温馨提示</h4>
-    <p style="color:#ff6b35;font-size:12px;line-height:1.8;">
-      彩票开奖完全随机，任何分析都无法改变中奖概率。<br>
-      娱乐为主、理性购彩、量力而行！
-    </p>
-  </div>
-  <div class="card">
-    <h3>🗑️ 数据管理</h3>
-    <button class="btn btn-danger" onclick="clearAllData()">清除所有数据</button>
-    <button class="btn btn-secondary" onclick="exportData()" style="margin-left:8px;">导出数据(JSON)</button>
-    <input type="file" id="import-file" accept=".json" style="display:none;" onchange="importData(event)">
-    <button class="btn btn-secondary" onclick="document.getElementById('import-file').click()" style="margin-left:8px;">导入数据</button>
-  </div>
+<div class="card">
+<h2>📋 我的推荐</h2>
+<div id="dlt-myrec">暂无保存的推荐</div>
+</div>
 </div>
 
-<div class="toast" id="toast"></div>
+<!-- 双色球 -->
+<div id="tab-ssq" class="tab-content">
+<div class="card">
+<h2>📥 数据录入</h2>
+<div class="tab-bar" style="margin-bottom:10px">
+<button class="active" onclick="switchInputTab('ssq','manual')">✏️ 手动输入</button>
+<button onclick="switchInputTab('ssq','batch')">📋 批量导入</button>
+<button onclick="switchInputTab('ssq','fetch')">🌐 联网获取</button>
+</div>
+<div id="ssq-manual" class="input-tab active">
+<label>期号</label><input type="text" id="ssq-issue" placeholder="如 2025076">
+<label>红球（6个，01-33，空格分隔）</label><input type="text" id="ssq-red" placeholder="如 03 09 15 22 28 31">
+<label>蓝球（1个，01-16）</label><input type="text" id="ssq-blue" placeholder="如 12">
+<div style="margin-top:8px">
+<button class="btn btn-primary" onclick="addSSQRecord()">➕ 添加开奖记录</button>
+</div>
+</div>
+<div id="ssq-batch" class="input-tab">
+<div class="upload-area" id="ssq-upload-area" onclick="document.getElementById('ssq-file').click()" ondrop="handleDrop(event,'ssq')" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+<div style="font-size:30px;margin-bottom:8px">📂</div>
+<p style="font-size:13px;color:#888">点击或拖拽上传文件</p>
+<p style="font-size:11px;color:#555">支持 TXT / CSV / XLSX</p>
+<input type="file" id="ssq-file" style="display:none" onchange="handleFileUpload(event,'ssq')" accept=".txt,.csv,.xlsx,.xls">
+</div>
+<div style="margin-top:8px">
+<label>或直接粘贴（每行一期：期号 号码）</label>
+<textarea id="ssq-paste" rows="6" placeholder="2025076 03 09 15 22 28 31 12&#10;2025075 05 11 18 25 30 33 07&#10;..."></textarea>
+<button class="btn btn-primary" onclick="parsePastedData('ssq')">📥 解析并导入</button>
+</div>
+</div>
+<div id="ssq-fetch" class="input-tab">
+<button class="btn btn-info" onclick="fetchSSQ()">🌐 一键获取最新开奖号</button>
+<div id="ssq-fetch-result" style="margin-top:8px"></div>
+</div>
+</div>
 
+<div class="card">
+<h2>📊 9维数据分析 + 尾数分析</h2>
+<button class="btn btn-secondary" onclick="analyzeSSQ()" id="ssq-analyze-btn">🔍 开始分析</button>
+<div id="ssq-analysis" style="margin-top:10px"></div>
+</div>
+
+<div class="card">
+<h2>🎯 智能推荐 5 注</h2>
+<button class="btn btn-success" onclick="genSSQ()" id="ssq-gen-btn">🚀 生成 5 注推荐</button>
+<div id="ssq-recommend" style="margin-top:10px"></div>
+<div id="ssq-confirm" style="margin-top:10px;display:none" class="confirm-banner">
+<p style="font-size:13px;color:#96c93d">✅ 5 注推荐已生成，确认保存？</p>
+<button class="btn btn-success" onclick="confirmSSQ()">✅ 确认保存这 5 注</button>
+<button class="btn btn-warning" onclick="regenerateSSQ()">🔄 重新生成</button>
+</div>
+</div>
+
+<div class="card">
+<h2>📋 我的推荐</h2>
+<div id="ssq-myrec">暂无保存的推荐</div>
+</div>
+</div>
+
+<!-- 开奖核对 -->
+<div class="card" id="check-section">
+<h2>🔍 开奖核对</h2>
+<div class="tab-bar" style="margin-bottom:10px">
+<button class="active" onclick="switchCheckTab('dlt')">🎰 大乐透核对</button>
+<button onclick="switchCheckTab('ssq')">🎱 双色球核对</button>
+</div>
+<div id="check-dlt" class="check-tab active">
+<label>核对期号</label><input type="text" id="check-dlt-issue" placeholder="如 25076">
+<label>前区开奖号（5个）</label><input type="text" id="check-dlt-front" placeholder="如 03 12 18 25 31">
+<label>后区开奖号（2个）</label><input type="text" id="check-dlt-back" placeholder="如 04 09">
+<button class="btn btn-primary" onclick="checkDLT()">🔍 开始核对</button>
+<div id="check-dlt-result" style="margin-top:10px"></div>
+</div>
+<div id="check-ssq" class="check-tab">
+<label>核对期号</label><input type="text" id="check-ssq-issue" placeholder="如 2025076">
+<label>红球开奖号（6个）</label><input type="text" id="check-ssq-red" placeholder="如 03 09 15 22 28 31">
+<label>蓝球开奖号（1个）</label><input type="text" id="check-ssq-blue" placeholder="如 12">
+<button class="btn btn-primary" onclick="checkSSQ()">🔍 开始核对</button>
+<div id="check-ssq-result" style="margin-top:10px"></div>
+</div>
+</div>
+
+<!-- 历史记录 -->
+<div class="card">
+<h2>📜 历史记录 (<span id="history-count">0</span> 期)</h2>
+<div class="tab-bar" style="margin-bottom:10px">
+<button class="active" onclick="switchHistTab('dlt')">🎰 大乐透</button>
+<button onclick="switchHistTab('ssq')">🎱 双色球</button>
+</div>
+<div id="hist-dlt" class="hist-tab active">
+<div id="dlt-history-list" style="max-height:300px;overflow-y:auto"></div>
+</div>
+<div id="hist-ssq" class="hist-tab">
+<div id="ssq-history-list" style="max-height:300px;overflow-y:auto"></div>
+</div>
+<button class="btn btn-danger" onclick="clearAllData()" style="margin-top:8px">🗑️ 清除所有数据</button>
+<button class="btn btn-secondary" onclick="exportData()" style="margin-top:8px">📤 导出数据</button>
+<button class="btn btn-secondary" onclick="document.getElementById('importFile').click()" style="margin-top:8px">📥 导入数据</button>
+<input type="file" id="importFile" style="display:none" onchange="importData(event)" accept=".json">
+</div>
+</div>
+
+<div class="bottom-nav">
+<button class="active" onclick="scrollToSection('top')"><span class="nav-icon">🎯</span>选号</button>
+<button onclick="scrollToSection('check')"><span class="nav-icon">🔍</span>核对</button>
+<button onclick="scrollToSection('history')"><span class="nav-icon">📜</span>历史</button>
+<button onclick="exportData()"><span class="nav-icon">📤</span>备份</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
-// ==================== 工具函数 ====================
-function toast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2500);
-}
+// ========== 密码系统 ==========
+const PWD_KEY = 'lottery_pwd_v4';
+const DATA_KEY = 'lottery_data_v4';
 
-function toggleSection(el) {
-  el.classList.toggle('collapsed');
-  const target = el.nextElementSibling;
-  target.classList.toggle('collapsed');
-}
+function initPassword() {
+  const saved = localStorage.getItem(PWD_KEY);
+  const overlay = document.getElementById('passwordOverlay');
+  const mainApp = document.getElementById('mainApp');
+  const pwdInput = document.getElementById('pwdInput');
+  const pwdBtn = document.getElementById('pwdBtn');
+  const pwdError = document.getElementById('pwdError');
+  const pwdSet = document.getElementById('pwdSet');
 
-function parseNums(s) {
-  return s.trim().split(/[\s,，;；]+/).map(n => parseInt(n, 10)).filter(n => !isNaN(n));
-}
-
-function formatNum(n, len) {
-  return String(n).padStart(len || 2, '0');
-}
-
-function getDLTData() {
-  try { return JSON.parse(localStorage.getItem('dlt_data') || '[]'); } catch { return []; }
-}
-function saveDLTData(data) {
-  localStorage.setItem('dlt_data', JSON.stringify(data.slice(-50)));
-}
-function getSSQData() {
-  try { return JSON.parse(localStorage.getItem('ssq_data') || '[]'); } catch { return []; }
-}
-function saveSSQData(data) {
-  localStorage.setItem('ssq_data', JSON.stringify(data.slice(-50)));
-}
-
-// ==================== Tab 切换 ====================
-let currentImportType = 'dlt';
-let currentImportFileType = 'dlt';
-let currentImportOCRType = 'dlt';
-
-document.querySelectorAll('.tab-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById('page-' + btn.dataset.tab).classList.add('active');
-  });
-});
-
-function setImportType(type, el) {
-  currentImportType = type;
-  el.parentElement.querySelectorAll('button').forEach(b => b.classList.remove('active'));
-  el.classList.add('active');
-}
-function setImportFileType(type, el) {
-  currentImportFileType = type;
-  el.parentElement.querySelectorAll('button').forEach(b => b.classList.remove('active'));
-  el.classList.add('active');
-}
-function setImportOCRType(type, el) {
-  currentImportOCRType = type;
-  el.parentElement.querySelectorAll('button').forEach(b => b.classList.remove('active'));
-  el.classList.add('active');
-}
-
-// ==================== 批量文本导入 ====================
-function batchImportText() {
-  const text = document.getElementById('batch-text').value.trim();
-  if (!text) { toast('请先粘贴数据'); return; }
-  const lines = text.split('\n').map(l => l.trim()).filter(l => l);
-  let success = 0, fail = 0, failLines = [];
-
-  if (currentImportType === 'dlt') {
-    const data = getDLTData();
-    lines.forEach((line, idx) => {
-      const nums = parseNums(line);
-      if (nums.length >= 7) {
-        const period = String(nums[0]);
-        const front = nums.slice(1, 6);
-        const back = nums.slice(6, 8);
-        if (front.every(n => n >= 1 && n <= 35) && back.every(n => n >= 1 && n <= 12)) {
-          data.push({ period, front: [...new Set(front)].sort((a,b)=>a-b), back: [...new Set(back)].sort((a,b)=>a-b), time: Date.now() });
-          success++;
-        } else { fail++; failLines.push(idx+1); }
-      } else { fail++; failLines.push(idx+1); }
-    });
-    saveDLTData(data);
-    renderDLTHistory(); renderDLTAnalysis();
-  } else {
-    const data = getSSQData();
-    lines.forEach((line, idx) => {
-      const nums = parseNums(line);
-      if (nums.length >= 8) {
-        const period = String(nums[0]);
-        const red = nums.slice(1, 7);
-        const blue = nums[7];
-        if (red.every(n => n >= 1 && n <= 33) && blue >= 1 && blue <= 16) {
-          data.push({ period, red: [...new Set(red)].sort((a,b)=>a-b), blue, time: Date.now() });
-          success++;
-        } else { fail++; failLines.push(idx+1); }
-      } else { fail++; failLines.push(idx+1); }
-    });
-    saveSSQData(data);
-    renderSSQHistory(); renderSSQAnalysis();
+  if (!saved) {
+    pwdSet.style.display = 'block';
+    pwdBtn.textContent = '🔑 设置密码';
   }
 
-  showImportResult(success, fail, failLines, currentImportType);
-}
-
-// ==================== 文件上传导入 ====================
-function batchImportFile(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  const ext = file.name.split('.').pop().toLowerCase();
-  const reader = new FileReader();
-
-  reader.onload = () => {
-    let text = '';
-    if (ext === 'xlsx' || ext === 'xls') {
-      // For xlsx, we'll parse as binary and extract text
-      toast('正在解析 Excel 文件...');
-      parseExcelFile(file);
-      return;
+  pwdBtn.onclick = function() {
+    const val = pwdInput.value.trim();
+    if (!val) return;
+    if (!saved) {
+      localStorage.setItem(PWD_KEY, val);
+      unlockApp();
+    } else if (val === saved) {
+      unlockApp();
     } else {
-      text = reader.result;
-    }
-    processImportText(text, currentImportFileType);
-  };
-
-  if (ext === 'xlsx' || ext === 'xls') {
-    reader.readAsArrayBuffer(file);
-  } else {
-    reader.readAsText(file, 'UTF-8');
-  }
-}
-
-function parseExcelFile(file) {
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    const data = new Uint8Array(e.target.result);
-    // Extract text content from xlsx (it's a zip of XML files)
-    // We'll use a simpler approach: extract numbers from the raw bytes
-    let text = '';
-    try {
-      // Read as text and parse
-      const str = new TextDecoder('utf-8').decode(data);
-      // Extract numbers from the XML content
-      const numMatches = str.match(/\d{1,2}[\s,，]\d{1,2}[\s,，]\d{1,2}[\s,，]\d{1,2}[\s,，]\d{1,2}[\s,，]\d{1,2}[\s,，]\d{1,2}[\s,，]\d{1,2}/g);
-      if (numMatches) {
-        text = numMatches.join('\n');
-      } else {
-        // Fallback: extract all numbers and group them
-        const allNums = str.match(/\d{1,2}/g);
-        if (allNums && allNums.length >= 7) {
-          let lines = [];
-          let i = 0;
-          while (i + 7 <= allNums.length) {
-            lines.push(allNums.slice(i, i + 7).join(' '));
-            i += 7;
-          }
-          text = lines.join('\n');
-        }
-      }
-    } catch(err) {
-      toast('Excel 解析失败，请另存为 TXT 后重试');
-      return;
-    }
-    if (text.trim()) {
-      processImportText(text, currentImportFileType);
-    } else {
-      toast('无法从 Excel 中提取号码，请检查格式');
+      pwdError.style.display = 'block';
+      pwdInput.value = '';
+      setTimeout(() => pwdError.style.display = 'none', 2000);
     }
   };
-  reader.readAsArrayBuffer(file);
+  pwdInput.onkeydown = function(e) { if (e.key === 'Enter') pwdBtn.onclick(); };
 }
 
-function processImportText(text, type) {
-  const lines = text.split('\n').map(l => l.trim()).filter(l => l);
-  let success = 0, fail = 0, failLines = [];
-
-  if (type === 'dlt') {
-    const data = getDLTData();
-    lines.forEach((line, idx) => {
-      const nums = parseNums(line);
-      // Need at least 6 nums (5 front + 2 back), first might be period
-      if (nums.length >= 7) {
-        let period, front, back;
-        // Check if first number looks like a period (4-5 digits)
-        if (nums[0] > 1000) {
-          period = String(nums[0]);
-          front = nums.slice(1, 6);
-          back = nums.slice(6, 8);
-        } else {
-          // No period, use line number
-          period = String(26000 + idx + 1);
-          front = nums.slice(0, 5);
-          back = nums.slice(5, 7);
-        }
-        if (front.length === 5 && back.length >= 2 && front.every(n => n >= 1 && n <= 35) && back.every(n => n >= 1 && n <= 12)) {
-          data.push({ period, front: [...new Set(front)].sort((a,b)=>a-b), back: [...new Set(back.slice(0,2))].sort((a,b)=>a-b), time: Date.now() });
-          success++;
-        } else { fail++; failLines.push(idx+1); }
-      } else { fail++; failLines.push(idx+1); }
-    });
-    saveDLTData(data);
-    renderDLTHistory(); renderDLTAnalysis();
-  } else {
-    const data = getSSQData();
-    lines.forEach((line, idx) => {
-      const nums = parseNums(line);
-      if (nums.length >= 7) {
-        let period, red, blue;
-        if (nums[0] > 10000) {
-          period = String(nums[0]);
-          red = nums.slice(1, 7);
-          blue = nums[7] || nums[6];
-        } else {
-          period = String(2024000 + idx + 1);
-          red = nums.slice(0, 6);
-          blue = nums[6];
-        }
-        if (red.length === 6 && blue && red.every(n => n >= 1 && n <= 33) && blue >= 1 && blue <= 16) {
-          data.push({ period, red: [...new Set(red)].sort((a,b)=>a-b), blue, time: Date.now() });
-          success++;
-        } else { fail++; failLines.push(idx+1); }
-      } else { fail++; failLines.push(idx+1); }
-    });
-    saveSSQData(data);
-    renderSSQHistory(); renderSSQAnalysis();
-  }
-
-  showImportResult(success, fail, failLines, type);
+function unlockApp() {
+  document.getElementById('passwordOverlay').style.display = 'none';
+  document.getElementById('mainApp').style.display = 'block';
+  loadAllData();
 }
 
-function showImportResult(success, fail, failLines, type) {
-  const card = document.getElementById('import-result-card');
-  const content = document.getElementById('import-result-content');
-  card.style.display = 'block';
+// ========== 数据存储 ==========
+function getStore() {
+  try {
+    return JSON.parse(localStorage.getItem(DATA_KEY)) || { dlt: [], ssq: [], dltRec: null, ssqRec: null };
+  } catch { return { dlt: [], ssq: [], dltRec: null, ssqRec: null }; }
+}
+function saveStore(s) { localStorage.setItem(DATA_KEY, JSON.stringify(s)); }
 
-  let html = `<div style="color:#4CAF50;font-size:14px;font-weight:bold;">✅ 成功导入 ${success} 期</div>`;
-  if (fail > 0) {
-    html += `<div style="color:#ff9800;font-size:13px;margin-top:4px;">⚠️ 跳过 ${fail} 行（格式不正确，行号：${failLines.join(',')}）</div>`;
-  }
-  html += `<div style="color:#666;font-size:12px;margin-top:8px;">数据已合并到${type === 'dlt' ? '大乐透' : '双色球'}历史记录中，可前往对应页面查看。</div>`;
-  content.innerHTML = html;
-
-  // Switch to the correct tab after import
-  if (type === 'dlt') {
-    document.querySelector('.tab-btn[data-tab="dlt"]').click();
-  } else {
-    document.querySelector('.tab-btn[data-tab="ssq"]').click();
-  }
-
-  toast(`成功导入 ${success} 期数据！`);
+function loadAllData() {
+  const s = getStore();
+  renderHistory('dlt'); renderHistory('ssq');
+  renderMyRec('dlt'); renderMyRec('ssq');
+  document.getElementById('history-count').textContent = s.dlt.length + s.ssq.length;
 }
 
-// ==================== 截图识别（OCR）====================
-async function batchOCR(e) {
-  const files = Array.from(e.target.files);
-  if (!files.length) return;
-
-  // Check for Tesseract.js availability
-  if (typeof Tesseract === 'undefined') {
-    await loadTesseract();
-  }
-
-  const preview = document.getElementById('ocr-preview');
-  preview.innerHTML = '<div style="color:#ff6b35;font-size:13px;">🔍 正在识别图片中的号码，请稍候...</div>';
-
-  let allResults = [];
-
-  for (const file of files) {
-    try {
-      const result = await recognizeImage(file);
-      if (result) {
-        allResults.push({ file: file.name, ...result });
-      }
-    } catch(err) {
-      allResults.push({ file: file.name, error: err.message });
-    }
-  }
-
-  displayOCRResults(allResults);
+// ========== Tab 切换 ==========
+function switchMainTab(t) {
+  document.querySelectorAll('.tab-bar button').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-' + t).classList.add('active');
+}
+function switchInputTab(type, tab) {
+  const parent = document.getElementById('tab-' + type);
+  parent.querySelectorAll('.tab-bar button').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  parent.querySelectorAll('.input-tab').forEach(c => c.classList.remove('active'));
+  document.getElementById(type + '-' + tab).classList.add('active');
+}
+function switchCheckTab(t) {
+  document.querySelectorAll('#check-section .tab-bar button').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  document.querySelectorAll('.check-tab').forEach(c => c.classList.remove('active'));
+  document.getElementById('check-' + t).classList.add('active');
+}
+function switchHistTab(t) {
+  document.querySelectorAll('#check-section').forEach(() => {});
+  const btns = document.querySelectorAll('.card .tab-bar button');
+  // simplified
+  document.querySelectorAll('.hist-tab').forEach(c => c.classList.remove('active'));
+  document.getElementById('hist-' + t).classList.add('active');
 }
 
-function loadTesseract() {
-  return new Promise((resolve, reject) => {
-    if (typeof Tesseract !== 'undefined') { resolve(); return; }
-    const script = document.createElement('script');
-    script.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
-    script.onload = resolve;
-    script.onerror = () => reject(new Error('无法加载OCR模块'));
-    document.head.appendChild(script);
-  });
+// ========== 手动添加 ==========
+function parseNums(str) {
+  return str.trim().split(/[\s,，]+/).map(n => parseInt(n)).filter(n => !isNaN(n));
 }
 
-function recognizeImage(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const img = new Image();
-      img.onload = () => {
-        // Use Tesseract.js for OCR
-        Tesseract.recognize(img.src, 'chi_sim+eng', {
-          logger: () => {}
-        }).then(({ data: { text } }) => {
-          const result = parseOCRText(text, currentImportOCRType);
-          resolve(result);
-        }).catch(err => reject(err));
-      };
-      img.src = reader.result;
-    };
-    reader.readAsDataURL(file);
-  });
-}
-
-function parseOCRText(text, type) {
-  // Extract numbers from OCR result
-  const clean = text.replace(/[^\d\s]/g, ' ').replace(/\s+/g, ' ').trim();
-  const nums = clean.split(/\s+/).map(Number).filter(n => !isNaN(n) && n > 0);
-
-  if (type === 'dlt') {
-    // Group into sets of 7 (5 front + 2 back)
-    let matches = [];
-    for (let i = 0; i + 7 <= nums.length; i += 7) {
-      const group = nums.slice(i, i + 7);
-      const front = group.slice(0, 5);
-      const back = group.slice(5, 7);
-      if (front.every(n => n >= 1 && n <= 35) && back.every(n => n >= 1 && n <= 12)) {
-        matches.push({ period: String(26000 + matches.length + 1), front, back });
-      }
-    }
-    return { type: 'dlt', matches, rawText: text.substring(0, 200) };
-  } else {
-    let matches = [];
-    for (let i = 0; i + 7 <= nums.length; i += 7) {
-      const group = nums.slice(i, i + 7);
-      const red = group.slice(0, 6);
-      const blue = group[6];
-      if (red.every(n => n >= 1 && n <= 33) && blue >= 1 && blue <= 16) {
-        matches.push({ period: String(2024000 + matches.length + 1), red, blue });
-      }
-    }
-    return { type: 'ssq', matches, rawText: text.substring(0, 200) };
-  }
-}
-
-function displayOCRResults(results) {
-  const preview = document.getElementById('ocr-preview');
-  let html = '';
-
-  results.forEach(r => {
-    if (r.error) {
-      html += `<div style="color:#ff1744;padding:8px;border-bottom:1px solid #1a2255;">❌ ${r.file}: ${r.error}</div>`;
-      return;
-    }
-    html += `<div style="padding:8px;border-bottom:1px solid #1a2255;">
-      <div style="color:#7c8bff;font-size:12px;margin-bottom:4px;">📸 ${r.file}</div>`;
-    if (r.matches && r.matches.length > 0) {
-      r.matches.forEach(m => {
-        if (r.type === 'dlt') {
-          html += `<div style="margin:4px 0;">
-            ${m.front.map(n => `<span class="ball-sm ball-red">${formatNum(n)}</span>`).join('')}
-            + ${m.back.map(n => `<span class="ball-sm ball-blue">${formatNum(n)}</span>`).join('')}
-          </div>`;
-        } else {
-          html += `<div style="margin:4px 0;">
-            ${m.red.map(n => `<span class="ball-sm ball-red">${formatNum(n)}</span>`).join('')}
-            + <span class="ball-sm ball-blue">${formatNum(m.blue)}</span>
-          </div>`;
-        }
-      });
-      html += `<button class="btn btn-success" style="margin-top:6px;font-size:12px;padding:6px 12px;" onclick="confirmOCRImport(this, '${r.type}', ${JSON.stringify(r.matches).replace(/"/g, '&quot;')})">✅ 确认导入这 ${r.matches.length} 期</button>`;
-    } else {
-      html += `<div style="color:#ff9800;font-size:12px;">⚠️ 未能识别到有效号码，请手动输入</div>`;
-      html += `<div style="color:#555;font-size:11px;margin-top:4px;">原始识别内容：${r.rawText || '(空)'}</div>`;
-    }
-    html += `</div>`;
-  });
-
-  preview.innerHTML = html;
-}
-
-function confirmOCRImport(btn, type, matches) {
-  if (type === 'dlt') {
-    const data = getDLTData();
-    matches.forEach(m => {
-      data.push({ period: m.period, front: m.front, back: m.back, time: Date.now() });
-    });
-    saveDLTData(data);
-    renderDLTHistory(); renderDLTAnalysis();
-  } else {
-    const data = getSSQData();
-    matches.forEach(m => {
-      data.push({ period: m.period, red: m.red, blue: m.blue, time: Date.now() });
-    });
-    saveSSQData(data);
-    renderSSQHistory(); renderSSQAnalysis();
-  }
-  btn.textContent = '✅ 已导入';
-  btn.disabled = true;
-  toast(`成功导入 ${matches.length} 期数据！`);
-}
-
-// ==================== 大乐透功能 ====================
-function addDLT() {
-  const period = document.getElementById('dlt-period').value.trim();
+function addDLTRecord() {
+  const issue = document.getElementById('dlt-issue').value.trim();
   const front = parseNums(document.getElementById('dlt-front').value);
   const back = parseNums(document.getElementById('dlt-back').value);
-  if (front.length !== 5 || back.length !== 2) { toast('请输入5个前区+2个后区号码'); return; }
-  if (front.some(n => n < 1 || n > 35) || back.some(n => n < 1 || n > 12)) { toast('前区1-35，后区1-12'); return; }
-  const data = getDLTData();
-  data.push({ period, front: [...new Set(front)].sort((a,b)=>a-b), back: [...new Set(back)].sort((a,b)=>a-b), time: Date.now() });
-  saveDLTData(data);
+  if (front.length !== 5 || back.length !== 2) return alert('请输入正确的号码数量');
+  if (new Set(front).size !== 5 || new Set(back).size !== 2) return alert('号码不能重复');
+  if (front.some(n => n < 1 || n > 35) || back.some(n => n < 1 || n > 12)) return alert('号码超出范围');
+  const s = getStore();
+  s.dlt.push({ issue, front: front.sort((a,b)=>a-b), back: back.sort((a,b)=>a-b), time: Date.now() });
+  saveStore(s); renderHistory('dlt'); document.getElementById('history-count').textContent = s.dlt.length + s.ssq.length;
+  document.getElementById('dlt-issue').value = '';
   document.getElementById('dlt-front').value = '';
   document.getElementById('dlt-back').value = '';
-  renderDLTHistory();
-  renderDLTAnalysis();
-  toast('添加成功！');
+  alert('✅ 大乐透记录已添加');
 }
 
-function renderDLTHistory() {
-  const data = getDLTData();
-  const el = document.getElementById('dlt-history');
-  document.getElementById('dlt-count').textContent = `(${data.length}期)`;
-  if (!data.length) { el.innerHTML = '<div class="empty-state"><div class="icon">📭</div>暂无数据</div>'; return; }
-  let html = '<div style="max-height:400px;overflow-y:auto;">';
-  data.slice().reverse().forEach((d, i) => {
-    html += `<div style="display:flex;align-items:center;padding:8px 0;border-bottom:1px solid #1a2255;gap:6px;flex-wrap:wrap;">
-      <span style="color:#ff6b35;font-weight:bold;font-size:12px;min-width:60px;">${d.period}</span>
-      ${d.front.map(n => `<span class="ball-sm ball-red">${formatNum(n)}</span>`).join('')}
-      ${d.back.map(n => `<span class="ball-sm ball-blue">${formatNum(n)}</span>`).join('')}
-      <span style="margin-left:auto;color:#666;font-size:11px;">${calcDLTStats(d)}</span>
-    </div>`;
-  });
-  html += '</div>';
-  el.innerHTML = html;
-}
-
-function calcDLTStats(d) {
-  const sum = d.front.reduce((a,b)=>a+b,0);
-  const odd = d.front.filter(n=>n%2===1).length;
-  const span = Math.max(...d.front) - Math.min(...d.front);
-  return `和${sum} 跨${span} ${odd}:${5-odd}`;
-}
-
-function renderDLTAnalysis() {
-  const data = getDLTData();
-  const el = document.getElementById('dlt-analysis');
-  if (data.length < 5) { el.innerHTML = `<div class="empty-state"><div class="icon">📊</div>当前${data.length}期，建议累计5期以上再分析</div>`; return; }
-
-  const recent = data.slice(-50);
-  const freq = {};
-  const backFreq = {};
-  const lastSeen = {};
-  const backLastSeen = {};
-  let sumTotal = 0, oddCount = 0, evenCount = 0, bigCount = 0, smallCount = 0;
-  let spanTotal = 0, consecutiveCount = 0, repeatCount = 0;
-
-  recent.forEach((d, i) => {
-    d.front.forEach(n => { freq[n] = (freq[n]||0)+1; lastSeen[n] = i; });
-    d.back.forEach(n => { backFreq[n] = (backFreq[n]||0)+1; backLastSeen[n] = i; });
-    sumTotal += d.front.reduce((a,b)=>a+b,0);
-    d.front.forEach(n => { if(n%2===1) oddCount++; else evenCount++; if(n>=18) bigCount++; else smallCount++; });
-    spanTotal += Math.max(...d.front) - Math.min(...d.front);
-    for (let j = 0; j < d.front.length-1; j++) if (d.front[j+1] - d.front[j] === 1) { consecutiveCount++; break; }
-    if (i > 0) {
-      const prev = new Set(recent[i-1].front);
-      d.front.forEach(n => { if (prev.has(n)) repeatCount++; });
-    }
-  });
-
-  const maxFreq = Math.max(...Object.values(freq), 1);
-  const minFreq = Math.min(...Object.values(freq), 0);
-  const avgSum = (sumTotal / recent.length).toFixed(1);
-  const avgSpan = (spanTotal / recent.length).toFixed(1);
-
-  let html = `<h4>📊 基础统计（近${recent.length}期）</h4>`;
-  html += `<table class="stat-table"><tr><th>指标</th><th>数值</th></tr>`;
-  html += `<tr><td>平均和值</td><td>${avgSum}</td></tr>`;
-  html += `<tr><td>平均跨度</td><td>${avgSpan}</td></tr>`;
-  html += `<tr><td>连号出现率</td><td>${(consecutiveCount/recent.length*100).toFixed(0)}%</td></tr>`;
-  html += `<tr><td>含重号率</td><td>${((repeatCount/(recent.length-1))*100).toFixed(0)}%</td></tr>`;
-  html += `<tr><td>奇偶比</td><td>${oddCount}:${evenCount}</td></tr>`;
-  html += `<tr><td>大小比(≥18)</td><td>${bigCount}:${smallCount}</td></tr>`;
-  html += `</table>`;
-
-  html += `<h4>🔴 前区号码频次</h4>`;
-  const sorted = Object.entries(freq).sort((a,b) => b[1] - a[1]);
-  html += `<div style="display:flex;flex-wrap:wrap;gap:4px;margin:6px 0;">`;
-  sorted.forEach(([n, c]) => {
-    const miss = recent.length - (lastSeen[n] + 1);
-    let cls = 'ball-gray', tag = '';
-    if (c >= maxFreq * 0.7) { cls = 'ball-red'; tag = '<span class="tag tag-hot">热</span>'; }
-    else if (c <= minFreq + 1) { cls = 'ball-blue'; tag = '<span class="tag tag-cold">冷</span>'; }
-    if (miss >= 5) tag += `<span class="tag tag-miss">遗${miss}</span>`;
-    html += `<div style="text-align:center;"><span class="ball-sm ${cls}">${formatNum(n)}</span>${tag}<div style="font-size:9px;color:#888;">${c}次</div></div>`;
-  });
-  html += `</div>`;
-
-  html += `<h4>🔵 后区号码频次</h4>`;
-  const backSorted = Object.entries(backFreq).sort((a,b) => b[1] - a[1]);
-  html += `<div style="display:flex;flex-wrap:wrap;gap:4px;margin:6px 0;">`;
-  backSorted.forEach(([n, c]) => {
-    const miss = recent.length - (backLastSeen[n] + 1);
-    let cls = 'ball-gray', tag = '';
-    if (c >= 3) { cls = 'ball-blue'; tag = '<span class="tag tag-hot">热</span>'; }
-    else if (c <= 1) { cls = 'ball-red'; tag = '<span class="tag tag-cold">冷</span>'; }
-    if (miss >= 3) tag += `<span class="tag tag-miss">遗${miss}</span>`;
-    html += `<div style="text-align:center;"><span class="ball-sm ${cls}">${formatNum(n)}</span>${tag}<div style="font-size:9px;color:#888;">${c}次</div></div>`;
-  });
-  html += `</div>`;
-
-  const missArr = Object.keys(freq).map(n => ({ n: +n, miss: recent.length - (lastSeen[n] + 1), freq: freq[n] })).sort((a,b) => b.miss - a.miss).slice(0, 8);
-  html += `<h4>⏰ 前区遗漏TOP8（回补紧迫度）</h4>`;
-  html += `<table class="stat-table"><tr><th>号码</th><th>遗漏期数</th><th>历史频次</th><th>紧迫度</th></tr>`;
-  missArr.forEach(d => {
-    const stars = d.miss >= 15 ? '⭐⭐⭐⭐⭐' : d.miss >= 10 ? '⭐⭐⭐⭐' : d.miss >= 5 ? '⭐⭐⭐' : '⭐⭐';
-    html += `<tr><td><span class="ball-sm ball-red">${formatNum(d.n)}</span></td><td>${d.miss}</td><td>${d.freq}</td><td>${stars}</td></tr>`;
-  });
-  html += `</table>`;
-
-  el.innerHTML = html;
-}
-
-// ==================== 大乐透智能推荐 ====================
-function genDLT() {
-  const data = getDLTData();
-  if (data.length < 3) { toast('至少需要3期数据'); return; }
-  const recent = data.slice(-50);
-  const recEl = document.getElementById('dlt-recommend');
-
-  const freq = {};
-  const backFreq = {};
-  const lastSeen = {};
-  const backLastSeen = {};
-  recent.forEach((d, i) => {
-    d.front.forEach(n => { freq[n] = (freq[n]||0)+1; lastSeen[n] = i; });
-    d.back.forEach(n => { backFreq[n] = (backFreq[n]||0)+1; backLastSeen[n] = i; });
-  });
-
-  const maxFreq = Math.max(...Object.values(freq), 1);
-  const backMaxFreq = Math.max(...Object.values(backFreq), 1);
-  const totalNums = recent.length;
-
-  function getWeight(n) {
-    const f = freq[n] || 0;
-    const miss = totalNums - (lastSeen[n] + 1);
-    let w = 1;
-    w += (f / maxFreq) * 2.5;
-    if (miss >= 15) w += (miss / totalNums) * 4;
-    else if (miss >= 8) w += (miss / totalNums) * 2.5;
-    return w;
-  }
-  function getBackWeight(n) {
-    const f = backFreq[n] || 0;
-    const miss = totalNums - (backLastSeen[n] + 1);
-    let w = 1;
-    w += (f / backMaxFreq) * 2;
-    if (miss >= 5) w += (miss / totalNums) * 3;
-    return w;
-  }
-
-  function weightedPick(arr, wFn) {
-    const weights = arr.map(n => wFn(n));
-    const total = weights.reduce((a,b)=>a+b,0);
-    let r = Math.random() * total;
-    for (let i = 0; i < arr.length; i++) { r -= weights[i]; if (r <= 0) return arr[i]; }
-    return arr[arr.length-1];
-  }
-
-  function genOne() {
-    const pool = Array.from({length:35},(_,i)=>i+1);
-    const backPool = Array.from({length:12},(_,i)=>i+1);
-    let front = [], back = [];
-    const picked = new Set();
-    while (front.length < 5) {
-      let n = weightedPick(pool.filter(n => !picked.has(n)), n => getWeight(n));
-      front.push(n); picked.add(n);
-    }
-    front.sort((a,b)=>a-b);
-    const bp = new Set();
-    while (back.length < 2) {
-      let n = weightedPick(backPool.filter(n => !bp.has(n)), n => getBackWeight(n));
-      back.push(n); bp.add(n);
-    }
-    back.sort((a,b)=>a-b);
-    return { front, back };
-  }
-
-  const strategies = [
-    { name: '热号主导+冷号回补', desc: '热号权重+遗漏回补' },
-    { name: '均衡兜底+连号防守', desc: '三区均衡+含连号' },
-    { name: '重号延续+大号拉伸', desc: '上期重号+跨度拉大' },
-    { name: '斜连追踪+跨度均衡', desc: '斜连号+中高跨度' },
-    { name: '温号组合+遗漏集中', desc: '温号为主+高遗漏' },
-  ];
-
-  let html = '';
-  strategies.forEach((s, i) => {
-    let result;
-    let attempts = 0;
-    do { result = genOne(); attempts++; } while (attempts < 100 && !validateDLT(result.front, recent));
-
-    const sum = result.front.reduce((a,b)=>a+b,0);
-    const odd = result.front.filter(n=>n%2===1).length;
-    const big = result.front.filter(n=>n>=18).length;
-    const span = Math.max(...result.front) - Math.min(...result.front);
-    const hasConsec = result.front.some((n,i) => i<4 && result.front[i+1]-n===1);
-    const lastFront = new Set(recent[recent.length-1]?.front || []);
-    const repeats = result.front.filter(n => lastFront.has(n)).length;
-
-    html += `<div class="rec-card">
-      <div class="group-title">第${i+1}注 · ${s.name}</div>
-      <div class="balls">${result.front.map(n => `<span class="ball-sm ball-red">${formatNum(n)}</span>`).join('')} + ${result.back.map(n => `<span class="ball-sm ball-blue">${formatNum(n)}</span>`).join('')}</div>
-      <div class="detail">
-        和值:${sum} | 跨度:${span} | 奇偶:${odd}:${5-odd} | 大小:${big}:${5-big}
-        ${hasConsec ? ' | ✅连号' : ''}${repeats>0 ? ' | ✅重号'+repeats : ''}
-        <br><span style="color:#666;">策略：${s.desc}</span>
-      </div>
-    </div>`;
-  });
-
-  recEl.innerHTML = html;
-  toast('5注推荐已生成！');
-}
-
-function validateDLT(front, recent) {
-  const sum = front.reduce((a,b)=>a+b,0);
-  if (sum < 70 || sum > 130) return false;
-  const span = Math.max(...front) - Math.min(...front);
-  if (span < 15 || span > 30) return false;
-  const odd = front.filter(n=>n%2===1).length;
-  if (odd === 0 || odd === 5) return false;
-  const z1 = front.filter(n=>n<=12).length;
-  const z2 = front.filter(n=>n>=13&&n<=24).length;
-  const z3 = front.filter(n=>n>=25).length;
-  if (z1===0 || z2===0 || z3===0) return false;
-  return true;
-}
-
-// ==================== 双色球功能 ====================
-function addSSQ() {
-  const period = document.getElementById('ssq-period').value.trim();
+function addSSQRecord() {
+  const issue = document.getElementById('ssq-issue').value.trim();
   const red = parseNums(document.getElementById('ssq-red').value);
   const blue = parseNums(document.getElementById('ssq-blue').value);
-  if (red.length !== 6 || blue.length !== 1) { toast('请输入6个红球+1个蓝球'); return; }
-  if (red.some(n => n < 1 || n > 33) || blue.some(n => n < 1 || n > 16)) { toast('红球1-33，蓝球1-16'); return; }
-  const data = getSSQData();
-  data.push({ period, red: [...new Set(red)].sort((a,b)=>a-b), blue: blue[0], time: Date.now() });
-  saveSSQData(data);
+  if (red.length !== 6 || blue.length !== 1) return alert('请输入正确的号码数量');
+  if (new Set(red).size !== 6) return alert('红球不能重复');
+  if (red.some(n => n < 1 || n > 33) || blue.some(n => n < 1 || n > 16)) return alert('号码超出范围');
+  const s = getStore();
+  s.ssq.push({ issue, red: red.sort((a,b)=>a-b), blue: blue.sort((a,b)=>a-b), time: Date.now() });
+  saveStore(s); renderHistory('ssq'); document.getElementById('history-count').textContent = s.dlt.length + s.ssq.length;
+  document.getElementById('ssq-issue').value = '';
   document.getElementById('ssq-red').value = '';
   document.getElementById('ssq-blue').value = '';
-  renderSSQHistory();
-  renderSSQAnalysis();
-  toast('添加成功！');
+  alert('✅ 双色球记录已添加');
 }
 
-function renderSSQHistory() {
-  const data = getSSQData();
-  const el = document.getElementById('ssq-history');
-  document.getElementById('ssq-count').textContent = `(${data.length}期)`;
-  if (!data.length) { el.innerHTML = '<div class="empty-state"><div class="icon">📭</div>暂无数据</div>'; return; }
-  let html = '<div style="max-height:400px;overflow-y:auto;">';
-  data.slice().reverse().forEach(d => {
-    html += `<div style="display:flex;align-items:center;padding:8px 0;border-bottom:1px solid #1a2255;gap:4px;flex-wrap:wrap;">
-      <span style="color:#ff6b35;font-weight:bold;font-size:12px;min-width:70px;">${d.period}</span>
-      ${d.red.map(n => `<span class="ball-sm ball-red">${formatNum(n)}</span>`).join('')}
-      <span class="ball-sm ball-blue">${formatNum(d.blue)}</span>
-      <span style="margin-left:auto;color:#666;font-size:11px;">${calcSSQStats(d)}</span>
-    </div>`;
+// ========== 渲染历史 ==========
+function renderHistory(type) {
+  const s = getStore();
+  const list = s[type].slice(-50).reverse();
+  const container = document.getElementById(type + '-history-list');
+  if (!list.length) { container.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div><p>暂无记录，请先录入数据</p></div>'; return; }
+  let html = '<table><tr><th>期号</th><th>前区/红球</th><th>后区/蓝球</th><th>时间</th></tr>';
+  list.forEach(r => {
+    const nums1 = r.front || r.red || [];
+    const nums2 = r.back || r.blue || [];
+    const balls1 = nums1.map(n => `<span class="num-ball red">${String(n).padStart(2,'0')}</span>`).join('');
+    const balls2 = nums2.map(n => `<span class="num-ball blue">${String(n).padStart(2,'0')}</span>`).join('');
+    const time = new Date(r.time).toLocaleDateString('zh-CN');
+    const issue = r.issue || '--';
+    html += `<tr><td>${issue}</td><td>${balls1}</td><td>${balls2}</td><td>${time}</td></tr>`;
   });
-  html += '</div>';
-  el.innerHTML = html;
+  html += '</table>';
+  container.innerHTML = html;
 }
 
-function calcSSQStats(d) {
-  const sum = d.red.reduce((a,b)=>a+b,0);
-  const odd = d.red.filter(n=>n%2===1).length;
-  const span = Math.max(...d.red) - Math.min(...d.red);
-  return `和${sum} 跨${span} ${odd}:${6-odd}`;
+// ========== 批量导入 ==========
+function handleDragOver(e) { e.preventDefault(); e.currentTarget.classList.add('dragover'); }
+function handleDragLeave(e) { e.currentTarget.classList.remove('dragover'); }
+function handleDrop(e) { e.preventDefault(); e.currentTarget.classList.remove('dragover'); const type = e.currentTarget.id.includes('dlt') ? 'dlt' : 'ssq'; handleFile(e.dataTransfer.files[0], type); }
+function handleFileUpload(e, type) { handleFile(e.target.files[0], type); }
+
+function handleFile(file, type) {
+  if (!file) return;
+  const name = file.name.toLowerCase();
+  if (name.endsWith('.xlsx') || name.endsWith('.xls')) {
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+      const wb = XLSX.read(evt.target.result, { type: 'array' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const data = XLSX.utils.sheet_to_json(ws, { header: 1 });
+      parseArrayData(data, type);
+    };
+    reader.readAsArrayBuffer(file);
+  } else {
+    const reader = new FileReader();
+    reader.onload = function(evt) { parseTextData(evt.target.result, type); };
+    reader.readAsText(file);
+  }
 }
 
-function renderSSQAnalysis() {
-  const data = getSSQData();
-  const el = document.getElementById('ssq-analysis');
-  if (data.length < 5) { el.innerHTML = `<div class="empty-state"><div class="icon">📊</div>当前${data.length}期，建议累计5期以上再分析</div>`; return; }
-
-  const recent = data.slice(-50);
-  const freq = {};
-  const blueFreq = {};
-  const lastSeen = {};
-  const blueLastSeen = {};
-  let sumTotal = 0, oddCount = 0, evenCount = 0, bigCount = 0, smallCount = 0;
-  let spanTotal = 0, consecutiveCount = 0, repeatCount = 0;
-
-  recent.forEach((d, i) => {
-    d.red.forEach(n => { freq[n] = (freq[n]||0)+1; lastSeen[n] = i; });
-    blueFreq[d.blue] = (blueFreq[d.blue]||0)+1;
-    blueLastSeen[d.blue] = i;
-    sumTotal += d.red.reduce((a,b)=>a+b,0);
-    d.red.forEach(n => { if(n%2===1) oddCount++; else evenCount++; if(n>=17) bigCount++; else smallCount++; });
-    spanTotal += Math.max(...d.red) - Math.min(...d.red);
-    for (let j = 0; j < d.red.length-1; j++) if (d.red[j+1] - d.red[j] === 1) { consecutiveCount++; break; }
-    if (i > 0) {
-      const prev = new Set(recent[i-1].red);
-      d.red.forEach(n => { if (prev.has(n)) repeatCount++; });
+function parseArrayData(rows, type) {
+  const s = getStore();
+  let count = 0;
+  rows.forEach(row => {
+    if (!row || row.length < 2) return;
+    const issue = String(row[0] || '');
+    let nums = [];
+    for (let i = 1; i < row.length; i++) { if (row[i] !== undefined && row[i] !== '') nums.push(parseInt(row[i])); }
+    if (type === 'dlt' && nums.length >= 7) {
+      s.dlt.push({ issue, front: nums.slice(0,5).sort((a,b)=>a-b), back: nums.slice(5,7).sort((a,b)=>a-b), time: Date.now() });
+      count++;
+    } else if (type === 'ssq' && nums.length >= 7) {
+      s.ssq.push({ issue, red: nums.slice(0,6).sort((a,b)=>a-b), blue: [nums[6]], time: Date.now() });
+      count++;
     }
   });
-
-  const maxFreq = Math.max(...Object.values(freq), 1);
-  const minFreq = Math.min(...Object.values(freq), 0);
-  const avgSum = (sumTotal / recent.length).toFixed(1);
-  const avgSpan = (spanTotal / recent.length).toFixed(1);
-
-  let html = `<h4>📊 基础统计（近${recent.length}期）</h4>`;
-  html += `<table class="stat-table"><tr><th>指标</th><th>数值</th></tr>`;
-  html += `<tr><td>平均和值</td><td>${avgSum}</td></tr>`;
-  html += `<tr><td>平均跨度</td><td>${avgSpan}</td></tr>`;
-  html += `<tr><td>连号出现率</td><td>${(consecutiveCount/recent.length*100).toFixed(0)}%</td></tr>`;
-  html += `<tr><td>含重号率</td><td>${((repeatCount/(recent.length-1))*100).toFixed(0)}%</td></tr>`;
-  html += `<tr><td>奇偶比</td><td>${oddCount}:${evenCount}</td></tr>`;
-  html += `<tr><td>大小比(≥17)</td><td>${bigCount}:${smallCount}</td></tr>`;
-  html += `</table>`;
-
-  html += `<h4>🔴 红球号码频次</h4>`;
-  const sorted = Object.entries(freq).sort((a,b) => b[1] - a[1]);
-  html += `<div style="display:flex;flex-wrap:wrap;gap:4px;margin:6px 0;">`;
-  sorted.forEach(([n, c]) => {
-    const miss = recent.length - (lastSeen[n] + 1);
-    let cls = 'ball-gray', tag = '';
-    if (c >= maxFreq * 0.6) { cls = 'ball-red'; tag = '<span class="tag tag-hot">热</span>'; }
-    else if (c <= minFreq + 1) { cls = 'ball-blue'; tag = '<span class="tag tag-cold">冷</span>'; }
-    if (miss >= 5) tag += `<span class="tag tag-miss">遗${miss}</span>`;
-    html += `<div style="text-align:center;"><span class="ball-sm ${cls}">${formatNum(n)}</span>${tag}<div style="font-size:9px;color:#888;">${c}次</div></div>`;
-  });
-  html += `</div>`;
-
-  html += `<h4>🔵 蓝球号码频次</h4>`;
-  const blueSorted = Object.entries(blueFreq).sort((a,b) => b[1] - a[1]);
-  html += `<div style="display:flex;flex-wrap:wrap;gap:4px;margin:6px 0;">`;
-  blueSorted.forEach(([n, c]) => {
-    const miss = recent.length - (blueLastSeen[n] + 1);
-    let cls = 'ball-gray', tag = '';
-    if (c >= 3) { cls = 'ball-blue'; tag = '<span class="tag tag-hot">热</span>'; }
-    else if (c <= 1) { cls = 'ball-red'; tag = '<span class="tag tag-cold">冷</span>'; }
-    if (miss >= 3) tag += `<span class="tag tag-miss">遗${miss}</span>`;
-    html += `<div style="text-align:center;"><span class="ball-sm ${cls}">${formatNum(n)}</span>${tag}<div style="font-size:9px;color:#888;">${c}次</div></div>`;
-  });
-  html += `</div>`;
-
-  const missArr = Object.keys(freq).map(n => ({ n: +n, miss: recent.length - (lastSeen[n] + 1), freq: freq[n] })).sort((a,b) => b.miss - a.miss).slice(0, 8);
-  html += `<h4>⏰ 红球遗漏TOP8</h4>`;
-  html += `<table class="stat-table"><tr><th>号码</th><th>遗漏期数</th><th>历史频次</th><th>紧迫度</th></tr>`;
-  missArr.forEach(d => {
-    const stars = d.miss >= 15 ? '⭐⭐⭐⭐⭐' : d.miss >= 10 ? '⭐⭐⭐⭐' : d.miss >= 5 ? '⭐⭐⭐' : '⭐⭐';
-    html += `<tr><td><span class="ball-sm ball-red">${formatNum(d.n)}</span></td><td>${d.miss}</td><td>${d.freq}</td><td>${stars}</td></tr>`;
-  });
-  html += `</table>`;
-
-  el.innerHTML = html;
+  saveStore(s); renderHistory(type); alert(`✅ 成功导入 ${count} 期${type === 'dlt' ? '大乐透' : '双色球'}数据`);
 }
 
-function genSSQ() {
-  const data = getSSQData();
-  if (data.length < 3) { toast('至少需要3期数据'); return; }
-  const recent = data.slice(-50);
-  const recEl = document.getElementById('ssq-recommend');
+function parseTextData(text, type) {
+  const s = getStore();
+  let count = 0;
+  text.split('\n').forEach(line => {
+    const parts = line.trim().split(/[\s,，\t]+/);
+    if (parts.length < 7) return;
+    const issue = parts[0];
+    const nums = parts.slice(1).map(n => parseInt(n)).filter(n => !isNaN(n));
+    if (type === 'dlt' && nums.length >= 7) {
+      s.dlt.push({ issue, front: nums.slice(0,5).sort((a,b)=>a-b), back: nums.slice(5,7).sort((a,b)=>a-b), time: Date.now() });
+      count++;
+    } else if (type === 'ssq' && nums.length >= 7) {
+      s.ssq.push({ issue, red: nums.slice(0,6).sort((a,b)=>a-b), blue: [nums[6]], time: Date.now() });
+      count++;
+    }
+  });
+  saveStore(s); renderHistory(type); alert(`✅ 成功导入 ${count} 期${type === 'dlt' ? '大乐透' : '双色球'}数据`);
+}
 
-  const freq = {};
-  const blueFreq = {};
-  const lastSeen = {};
-  const blueLastSeen = {};
-  recent.forEach((d, i) => {
-    d.red.forEach(n => { freq[n] = (freq[n]||0)+1; lastSeen[n] = i; });
-    blueFreq[d.blue] = (blueFreq[d.blue]||0)+1;
-    blueLastSeen[d.blue] = i;
+function parsePastedData(type) {
+  const text = document.getElementById(type + '-paste').value;
+  parseTextData(text, type);
+}
+
+// ========== 联网获取 ==========
+async function fetchDLT() {
+  const btn = document.getElementById('dlt-fetch-result');
+  btn.innerHTML = '⏳ 正在获取...';
+  const urls = [
+    'https://www.lottery.gov.cn/api/lottery_kj_detail_new.jspx?_ltype=4',
+    'https://www.cwl.gov.cn/cwl_admin/front/cwlkj/search/kjxx/findDrawNotice?name=ssq&issueCount=1',
+    'https://api.apiopen.top/api/Lottery?type=2'
+  ];
+  for (let url of urls) {
+    try {
+      const r = await fetch(url);
+      const j = await r.json();
+      // parse different formats
+      let issue, front, back;
+      if (j.data && j.data[0]) {
+        const d = j.data[0];
+        issue = d.code || d.issue || d.draw || '';
+        front = (d.front || d.red || d.numbers || '').split(/[\s,，]+/).map(n => parseInt(n)).filter(n => !isNaN(n));
+        back = (d.back || d.blue || '').split(/[\s,，]+/).map(n => parseInt(n)).filter(n => !isNaN(n));
+      }
+      if (front && front.length >= 5) {
+        document.getElementById('dlt-issue').value = issue;
+        document.getElementById('dlt-front').value = front.slice(0,5).map(n => String(n).padStart(2,'0')).join(' ');
+        document.getElementById('dlt-back').value = (back.length >= 2 ? back.slice(0,2) : front.slice(5,7)).map(n => String(n).padStart(2,'0')).join(' ');
+        btn.innerHTML = '✅ 获取成功！请检查并添加';
+        return;
+      }
+    } catch(e) {}
+  }
+  btn.innerHTML = '<div class="alert">❌ 联网获取失败，请手动输入或导入数据</div>';
+}
+
+async function fetchSSQ() {
+  const btn = document.getElementById('ssq-fetch-result');
+  btn.innerHTML = '⏳ 正在获取...';
+  const urls = [
+    'https://www.cwl.gov.cn/cwl_admin/front/cwlkj/search/kjxx/findDrawNotice?name=ssq&issueCount=1',
+    'https://www.lottery.gov.cn/api/lottery_kj_detail_new.jspx?_ltype=1',
+    'https://api.apiopen.top/api/Lottery?type=1'
+  ];
+  for (let url of urls) {
+    try {
+      const r = await fetch(url);
+      const j = await r.json();
+      let issue, red, blue;
+      if (j.data && j.data[0]) {
+        const d = j.data[0];
+        issue = d.code || d.issue || d.draw || '';
+        red = (d.red || d.front || d.numbers || '').split(/[\s,，]+/).map(n => parseInt(n)).filter(n => !isNaN(n));
+        blue = (d.blue || d.back || '').split(/[\s,，]+/).map(n => parseInt(n)).filter(n => !isNaN(n));
+      }
+      if (red && red.length >= 6) {
+        document.getElementById('ssq-issue').value = issue;
+        document.getElementById('ssq-red').value = red.slice(0,6).map(n => String(n).padStart(2,'0')).join(' ');
+        document.getElementById('ssq-blue').value = (blue.length >= 1 ? blue[0] : red[6] || '').toString();
+        btn.innerHTML = '✅ 获取成功！请检查并添加';
+        return;
+      }
+    } catch(e) {}
+  }
+  btn.innerHTML = '<div class="alert">❌ 联网获取失败，请手动输入或导入数据</div>';
+}
+
+// ========== 尾数分析引擎 ==========
+function getTail(n) { return n % 10; }
+
+function analyzeTails(nums) {
+  // nums: array of numbers (1-35 or 1-33)
+  const tailCount = Array(10).fill(0);
+  nums.forEach(n => tailCount[getTail(n)]++);
+  const hotTails = [], warmTails = [], coldTails = [];
+  tailCount.forEach((c, i) => {
+    if (c >= 3) hotTails.push(i);
+    else if (c >= 1) warmTails.push(i);
+    else coldTails.push(i);
+  });
+  return { tailCount, hotTails, warmTails, coldTails };
+}
+
+function analyzeTailTrend(records, type) {
+  // records: last N draws, analyze tail trends
+  const tailFreq = Array(10).fill(0);
+  const tailLastSeen = Array(10).fill(-1);
+  const tailStreak = Array(10).fill(0);
+  const recent10 = records.slice(-10);
+  const recent20 = records.slice(-20);
+
+  records.forEach((r, i) => {
+    const nums = type === 'dlt' ? [...r.front] : [...r.red];
+    nums.forEach(n => {
+      tailFreq[getTail(n)]++;
+      if (tailLastSeen[getTail(n)] === -1 || i - tailLastSeen[getTail(n)] === 1) {
+        tailStreak[getTail(n)]++;
+      }
+      tailLastSeen[getTail(n)] = i;
+    });
   });
 
-  const maxFreq = Math.max(...Object.values(freq), 1);
-  const blueMaxFreq = Math.max(...Object.values(blueFreq), 1);
-  const totalNums = recent.length;
+  // classify
+  const hot = [], warm = [], cold = [], dead = [];
+  tailFreq.forEach((f, i) => {
+    if (f === 0) dead.push(i);
+    else if (f >= 3) hot.push(i);
+    else if (f >= 1) warm.push(i);
+    else cold.push(i);
+  });
+
+  return { tailFreq, hot, warm, cold, dead, tailLastSeen, tailStreak };
+}
+
+// ========== 大乐透分析 ==========
+function analyzeDLT() {
+  const s = getStore();
+  const recs = s.dlt.slice(-50);
+  if (recs.length < 5) return alert('至少需要 5 期数据');
+
+  let html = '';
+
+  // 基本统计
+  const frontAll = recs.flatMap(r => r.front);
+  const backAll = recs.flatMap(r => r.back);
+  const fFreq = Array(36).fill(0), bFreq = Array(13).fill(0);
+  frontAll.forEach(n => fFreq[n]++);
+  backAll.forEach(n => bFreq[n]++);
+
+  html += '<div class="section-title">🔴 前区热冷号（近' + recs.length + '期）</div>';
+  html += renderFreqTable(fFreq, 1, 35, 5, 2, '热号', '温号', '冷号');
+
+  html += '<div class="section-title">🔵 后区热冷号</div>';
+  html += renderFreqTable(bFreq, 1, 12, 2, 1, '热号', '温号', '冷号');
+
+  // 尾数分析
+  const tailData = analyzeTailTrend(recs, 'dlt');
+  html += renderTailAnalysis(tailData, 'dlt');
+
+  // 和值
+  const sums = recs.map(r => r.front.reduce((a,b)=>a+b, 0));
+  const avgSum = (sums.reduce((a,b)=>a+b,0)/sums.length).toFixed(1);
+  html += `<div class="section-title">📊 和值统计</div><p>平均和值：<b style="color:#00d2ff">${avgSum}</b>（推荐区间 70-130）</p>`;
+
+  // 奇偶
+  const odds = recs.map(r => r.front.filter(n => n%2===1).length);
+  const avgOdd = (odds.reduce((a,b)=>a+b,0)/odds.length).toFixed(1);
+  html += `<div class="section-title">📊 奇偶比</div><p>前区平均奇数个数：<b style="color:#00d2ff">${avgOdd}</b>（推荐 3:2 或 2:3）</p>`;
+
+  // 大小
+  const bigs = recs.map(r => r.front.filter(n => n>=18).length);
+  const avgBig = (bigs.reduce((a,b)=>a+b,0)/bigs.length).toFixed(1);
+  html += `<div class="section-title">📊 大小比</div><p>前区平均大号(≥18)个数：<b style="color:#00d2ff">${avgBig}</b>（推荐 2大3小 或 3大2小）</p>`;
+
+  // 连号
+  let consecCount = 0;
+  recs.forEach(r => {
+    const f = r.front;
+    for (let i = 1; i < f.length; i++) if (f[i] - f[i-1] === 1) { consecCount++; break; }
+  });
+  html += `<div class="section-title">📊 连号检测</div><p>含连号期次：${consecCount}/${recs.length}（${(consecCount/recs.length*100).toFixed(0)}%，推荐≥1组）</p>`;
+
+  // 重号
+  let repeatCount = 0;
+  for (let i = 1; i < recs.length; i++) {
+    const prev = new Set(recs[i-1].front);
+    recs[i].front.forEach(n => { if (prev.has(n)) repeatCount++; });
+  }
+  html += `<div class="section-title">📊 重号追踪</div><p>相邻期间重号次数：${repeatCount}（推荐沿用 1 个上期号）</p>`;
+
+  // 遗漏
+  html += renderMissTable(recs, 'dlt');
+
+  document.getElementById('dlt-analysis').innerHTML = html;
+}
+
+// ========== 双色球分析 ==========
+function analyzeSSQ() {
+  const s = getStore();
+  const recs = s.ssq.slice(-50);
+  if (recs.length < 5) return alert('至少需要 5 期数据');
+
+  let html = '';
+
+  const redAll = recs.flatMap(r => r.red);
+  const blueAll = recs.flatMap(r => r.blue);
+  const rFreq = Array(34).fill(0), bFreq = Array(17).fill(0);
+  redAll.forEach(n => rFreq[n]++);
+  blueAll.forEach(n => bFreq[n]++);
+
+  html += '<div class="section-title">🔴 红球热冷号（近' + recs.length + '期）</div>';
+  html += renderFreqTable(rFreq, 1, 33, 6, 2, '热号', '温号', '冷号');
+
+  html += '<div class="section-title">🔵 蓝球热冷号</div>';
+  html += renderFreqTable(bFreq, 1, 16, 2, 1, '热号', '温号', '冷号');
+
+  // 尾数分析
+  const tailData = analyzeTailTrend(recs, 'ssq');
+  html += renderTailAnalysis(tailData, 'ssq');
+
+  // 和值
+  const sums = recs.map(r => r.red.reduce((a,b)=>a+b, 0));
+  const avgSum = (sums.reduce((a,b)=>a+b,0)/sums.length).toFixed(1);
+  html += `<div class="section-title">📊 和值统计</div><p>平均和值：<b style="color:#00d2ff">${avgSum}</b>（推荐区间 95-125）</p>`;
+
+  // 奇偶
+  const odds = recs.map(r => r.red.filter(n => n%2===1).length);
+  const avgOdd = (odds.reduce((a,b)=>a+b,0)/odds.length).toFixed(1);
+  html += `<div class="section-title">📊 奇偶比</div><p>红球平均奇数个数：<b style="color:#00d2ff">${avgOdd}</b>（推荐 3:3）</p>`;
+
+  // 大小
+  const bigs = recs.map(r => r.red.filter(n => n>=17).length);
+  const avgBig = (bigs.reduce((a,b)=>a+b,0)/bigs.length).toFixed(1);
+  html += `<div class="section-title">📊 大小比</div><p>红球平均大号(≥17)个数：<b style="color:#00d2ff">${avgBig}</b>（推荐 3:3）</p>`;
+
+  // 三区
+  const z1 = recs.map(r => r.red.filter(n => n<=11).length);
+  const z2 = recs.map(r => r.red.filter(n => n>=12 && n<=22).length);
+  const z3 = recs.map(r => r.red.filter(n => n>=23).length);
+  html += `<div class="section-title">📊 三区分布</div><p>1区(01-11)平均：${(z1.reduce((a,b)=>a+b,0)/z1.length).toFixed(1)} | 2区(12-22)：${(z2.reduce((a,b)=>a+b,0)/z2.length).toFixed(1)} | 3区(23-33)：${(z3.reduce((a,b)=>a+b,0)/z3.length).toFixed(1)}</p>`;
+
+  // 连号
+  let consecCount = 0;
+  recs.forEach(r => {
+    const red = r.red;
+    for (let i = 1; i < red.length; i++) if (red[i] - red[i-1] === 1) { consecCount++; break; }
+  });
+  html += `<div class="section-title">📊 连号检测</div><p>含连号期次：${consecCount}/${recs.length}（${(consecCount/recs.length*100).toFixed(0)}%，推荐≥1组）</p>`;
+
+  // 重号
+  let repeatCount = 0;
+  for (let i = 1; i < recs.length; i++) {
+    const prev = new Set(recs[i-1].red);
+    recs[i].red.forEach(n => { if (prev.has(n)) repeatCount++; });
+  }
+  html += `<div class="section-title">📊 重号追踪</div><p>相邻期间重号次数：${repeatCount}（推荐沿用 1 个上期号）</p>`;
+
+  // 遗漏
+  html += renderMissTable(recs, 'ssq');
+
+  document.getElementById('ssq-analysis').innerHTML = html;
+}
+
+// ========== 渲染工具函数 ==========
+function renderFreqTable(freq, min, max, hotThresh, warmThresh, hotLabel, warmLabel, coldLabel) {
+  let hot = [], warm = [], cold = [];
+  let maxF = Math.max(...freq.slice(min, max+1));
+  for (let i = min; i <= max; i++) {
+    if (freq[i] >= hotThresh) hot.push([i, freq[i]]);
+    else if (freq[i] >= warmThresh) warm.push([i, freq[i]]);
+    else cold.push([i, freq[i]]);
+  }
+  let html = '<div style="display:flex;flex-wrap:wrap;gap:4px;margin:6px 0">';
+  hot.forEach(([n,f]) => html += `<span class="num-ball red">${String(n).padStart(2,'0')}<span class="tag tag-hot" style="position:relative;top:-8px;left:-4px;font-size:9px">${f}</span></span>`);
+  warm.forEach(([n,f]) => html += `<span class="num-ball red" style="opacity:0.7">${String(n).padStart(2,'0')}<span class="tag tag-warm" style="position:relative;top:-8px;left:-4px;font-size:9px">${f}</span></span>`);
+  cold.forEach(([n,f]) => html += `<span class="num-ball red" style="opacity:0.4">${String(n).padStart(2,'0')}<span class="tag tag-cold" style="position:relative;top:-8px;left:-4px;font-size:9px">${f}</span></span>`);
+  html += '</div>';
+  return html;
+}
+
+function renderTailAnalysis(tailData, type) {
+  let html = '<div class="section-title">🎯 尾数分析引擎</div>';
+
+  // 尾数频率
+  html += '<table><tr><th>尾数</th><th>频次</th><th>状态</th><th>遗漏期数</th><th>连续活跃</th></tr>';
+  for (let i = 0; i < 10; i++) {
+    const f = tailData.tailFreq[i];
+    const miss = tailData.tailLastSeen[i] === -1 ? '--' : (tailData.tailLastSeen[i] >= 0 ? (tailData.tailLastSeen[i]) : '--');
+    let status = '🔴热';
+    if (tailData.cold.includes(i)) status = '🔵冷';
+    else if (tailData.warm.includes(i)) status = '🟡温';
+    if (tailData.dead.includes(i)) status = '⚫断';
+    html += `<tr><td><b>${i}</b></td><td>${f}</td><td>${status}</td><td>${miss}</td><td>${tailData.tailStreak[i] || 0}</td></tr>`;
+  }
+  html += '</table>';
+
+  // 推荐尾数组合
+  html += '<div style="margin-top:8px">';
+  if (tailData.hot.length >= 2) {
+    html += `<p>✅ 推荐热尾：${tailData.hot.join('、')}（优先选同尾号）</p>`;
+  }
+  if (tailData.warm.length >= 1) {
+    html += `<p>🟡 推荐温尾：${tailData.warm.slice(0,2).join('、')}（搭配使用）</p>`;
+  }
+  if (tailData.cold.length >= 1) {
+    html += `<p>🔵 关注冷尾：${tailData.cold.slice(0,1).join('、')}（遗漏回补）</p>`;
+  }
+  if (tailData.dead.length >= 1) {
+    html += `<p>⚫ 断尾区：${tailData.dead.join('、')}（${type === 'dlt' ? '前区号少，谨慎追' : '红球可关注回补'}）</p>`;
+  }
+
+  // 尾数斜连检测
+  html += `<p style="margin-top:6px;font-size:12px;color:#888">💡 尾数斜连：若近3期出现尾A→尾B→尾C的斜三连，关注尾C+1的接力</p>`;
+  html += '</div>';
+
+  return html;
+}
+
+function renderMissTable(recs, type) {
+  const nums = type === 'dlt' ? Array.from({length:35},(_,i)=>i+1) : Array.from({length:33},(_,i)=>i+1);
+  const miss = Array(nums.length+1).fill(0);
+  const lastSeen = Array(nums.length+1).fill(-1);
+
+  recs.forEach((r, i) => {
+    const ns = new Set(type === 'dlt' ? r.front : r.red);
+    nums.forEach(n => {
+      if (ns.has(n)) { miss[n] = 0; lastSeen[n] = i; }
+      else miss[n]++;
+    });
+  });
+
+  let html = '<div class="section-title">📊 遗漏值 TOP8</div><table><tr><th>排名</th><th>号码</th><th>遗漏期数</th><th>紧迫度</th></tr>';
+  const sorted = nums.map(n => ({ n, m: miss[n] })).sort((a,b) => b.m - a.m).slice(0, 8);
+  sorted.forEach((item, i) => {
+    const stars = '⭐'.repeat(Math.min(item.m, 10));
+    html += `<tr><td>${i+1}</td><td><span class="num-ball red">${String(item.n).padStart(2,'0')}</span></td><td>${item.m}</td><td>${stars}</td></tr>`;
+  });
+  html += '</table>';
+  return html;
+}
+
+// ========== 智能推荐（含尾数分析）==========
+function genDLT() {
+  const s = getStore();
+  const recs = s.dlt.slice(-50);
+  if (recs.length < 5) return alert('至少需要 5 期数据才能生成推荐');
+
+  const tailData = analyzeTailTrend(recs, 'dlt');
+  const frontAll = recs.flatMap(r => r.front);
+  const backAll = recs.flatMap(r => r.back);
+  const fFreq = Array(36).fill(0);
+  const bFreq = Array(13).fill(0);
+  frontAll.forEach(n => fFreq[n]++);
+  backAll.forEach(n => bFreq[n]++);
+
+  const maxFreq = Math.max(...fFreq.slice(1,36));
+
+  // 后区尾数分析
+  const backTailFreq = Array(10).fill(0);
+  backAll.forEach(n => backTailFreq[getTail(n)]++);
+  const backHotTails = [];
+  backTailFreq.forEach((f, i) => { if (f >= 2) backHotTails.push(i); });
+
+  // 上期号码（用于重号/邻号）
+  const lastFront = recs[recs.length - 1].front;
+  const lastBack = recs[recs.length - 1].back;
+
+  // 生成候选尾数组合
+  function pickTailCombo() {
+    // 选4个尾数：2热+1温+0-1冷
+    let tails = [];
+    const hotCopy = [...tailData.hot];
+    const warmCopy = [...tailData.warm];
+    const coldCopy = [...tailData.cold];
+
+    // 选同尾尾（优先热尾）
+    let sameTail = null;
+    if (hotCopy.length >= 1) { sameTail = hotCopy[0]; tails.push(sameTail); hotCopy.shift(); }
+    else if (warmCopy.length >= 1) { sameTail = warmCopy[0]; tails.push(sameTail); warmCopy.shift(); }
+
+    // 补热尾
+    while (tails.length < 2 && hotCopy.length > 0) { tails.push(hotCopy.shift()); }
+    // 补温尾
+    while (tails.length < 3 && warmCopy.length > 0) { tails.push(warmCopy.shift()); }
+    // 补冷尾（最多1个）
+    if (coldCopy.length > 0 && Math.random() < 0.3) { tails.push(coldCopy[0]); }
+
+    // 如果还不够4个尾，从剩余里补
+    for (let i = 0; tails.length < 4 && i < 10; i++) {
+      if (!tails.includes(i)) tails.push(i);
+    }
+
+    return { tails: tails.slice(0, 4), sameTail };
+  }
 
   function getWeight(n) {
-    const f = freq[n] || 0;
-    const miss = totalNums - (lastSeen[n] + 1);
     let w = 1;
-    w += (f / maxFreq) * 2.5;
-    if (miss >= 12) w += (miss / totalNums) * 4;
-    else if (miss >= 6) w += (miss / totalNums) * 2.5;
-    return w;
-  }
-  function getBlueWeight(n) {
-    const f = blueFreq[n] || 0;
-    const miss = totalNums - (blueLastSeen[n] + 1);
-    let w = 1;
-    w += (f / blueMaxFreq) * 2;
-    if (miss >= 4) w += (miss / totalNums) * 3;
+    if (fFreq[n] > maxFreq * 0.6) w += (fFreq[n] / maxFreq) * 2.5;
+    // 遗漏回补
+    let miss = 0;
+    for (let i = recs.length - 1; i >= 0; i--) {
+      if (recs[i].front.includes(n)) break;
+      miss++;
+    }
+    if (miss >= 15) w += 2.0;
+    else if (miss >= 10) w += 1.5;
+    else if (miss >= 5) w += 0.8;
+    // 重号加权
+    if (lastFront.includes(n)) w += 0.8;
+    // 邻号加权
+    lastFront.forEach(l => { if (Math.abs(n - l) === 1) w += 0.4; });
+    // 尾数加权
+    const t = getTail(n);
+    if (tailData.hot.includes(t)) w += 0.5;
+    if (tailData.cold.includes(t) && miss >= 8) w += 0.6;
     return w;
   }
 
-  function weightedPick(arr, wFn) {
-    const weights = arr.map(n => wFn(n));
+  function getBackWeight(n) {
+    let w = 1;
+    if (bFreq[n] > 0) w += bFreq[n] * 1.5;
+    let miss = 0;
+    for (let i = recs.length - 1; i >= 0; i--) {
+      if (recs[i].back.includes(n)) break;
+      miss++;
+    }
+    if (miss >= 5) w += 1.0;
+    if (lastBack.includes(n)) w += 0.5;
+    // 后区尾数
+    const t = getTail(n);
+    if (backHotTails.includes(t)) w += 0.5;
+    return w;
+  }
+
+  function weightedPick(arr, weights) {
     const total = weights.reduce((a,b)=>a+b,0);
     let r = Math.random() * total;
-    for (let i = 0; i < arr.length; i++) { r -= weights[i]; if (r <= 0) return arr[i]; }
-    return arr[arr.length-1];
+    for (let i = 0; i < arr.length; i++) {
+      r -= weights[i];
+      if (r <= 0) return arr[i];
+    }
+    return arr[arr.length - 1];
   }
 
-  function genOne() {
-    const pool = Array.from({length:33},(_,i)=>i+1);
-    const red = [], picked = new Set();
-    while (red.length < 6) {
-      let n = weightedPick(pool.filter(n => !picked.has(n)), n => getWeight(n));
-      red.push(n); picked.add(n);
-    }
-    red.sort((a,b)=>a-b);
-    const bp = Array.from({length:16},(_,i)=>i+1);
-    let blue = weightedPick(bp, n => getBlueWeight(n));
-    return { red, blue };
+  function validate(front, back) {
+    if (front.length !== 5 || back.length !== 2) return false;
+    const sum = front.reduce((a,b)=>a+b,0);
+    if (sum < 70 || sum > 130) return false;
+    const span = front[4] - front[0];
+    if (span < 15 || span > 30) return false;
+    const odd = front.filter(n => n%2===1).length;
+    if (odd === 0 || odd === 5) return false;
+    // 三区
+    const z1 = front.filter(n => n <= 9).length;
+    const z2 = front.filter(n => n >= 10 && n <= 18).length;
+    const z3 = front.filter(n => n >= 19 && n <= 27).length;
+    const z4 = front.filter(n => n >= 28).length;
+    if (z1 === 0 || z2 === 0 || z3 === 0) return false;
+    // 尾数个数 4
+    const tails = new Set(front.map(getTail));
+    if (tails.size < 3 || tails.size > 5) return false;
+    // 同尾号检查：至少1组二同尾
+    let sameCount = 0;
+    const tailMap = {};
+    front.forEach(n => { const t = getTail(n); tailMap[t] = (tailMap[t]||0) + 1; });
+    Object.values(tailMap).forEach(c => { if (c >= 2) sameCount++; });
+    if (sameCount === 0) return false;
+    // 后区
+    const bOdd = back.filter(n => n%2===1).length;
+    if (bOdd === 0 || bOdd === 2) return false;
+    const bSum = back.reduce((a,b)=>a+b,0);
+    if (bSum < 5 || bSum > 19) return false;
+    const bSpan = Math.abs(back[1] - back[0]);
+    if (bSpan < 3 || bSpan > 8) return false;
+    return true;
   }
 
   const strategies = [
-    { name: '热号主导+和值反弹', desc: '热号权重+遗漏回补' },
-    { name: '冷号回补+连号防守', desc: '高遗漏号+含连号' },
-    { name: '均衡兜底+斜连追踪', desc: '三区均衡+斜连号' },
-    { name: '重号延续+大号拉伸', desc: '上期重号+大号偏多' },
-    { name: '温号组合+跨度拉大', desc: '温号为主+高遗漏蓝球' },
+    { name: '热尾主导+同尾回补', desc: '热尾号为主，搭配遗漏回补' },
+    { name: '均衡兜底+连号防守', desc: '三区均衡，倾向含连号' },
+    { name: '重号延续+大号拉伸', desc: '保留上期号码，跨度拉大' },
+    { name: '斜连追踪+跨度均衡', desc: '追踪斜连趋势' },
+    { name: '温号组合+遗漏集中', desc: '温号为主，高遗漏号集中回补' }
   ];
 
-  let html = '';
-  strategies.forEach((s, i) => {
-    let result;
-    let attempts = 0;
-    do { result = genOne(); attempts++; } while (attempts < 100 && !validateSSQ(result.red, recent));
+  let results = [];
+  let attempts = 0;
+  const maxAttempts = 500;
 
-    const sum = result.red.reduce((a,b)=>a+b,0);
-    const odd = result.red.filter(n=>n%2===1).length;
-    const big = result.red.filter(n=>n>=17).length;
-    const span = Math.max(...result.red) - Math.min(...result.red);
-    const hasConsec = result.red.some((n,i) => i<5 && result.red[i+1]-n===1);
-    const lastRed = new Set(recent[recent.length-1]?.red || []);
-    const repeats = result.red.filter(n => lastRed.has(n)).length;
+  while (results.length < 5 && attempts < maxAttempts) {
+    attempts++;
+    const { tails, sameTail } = pickTailCombo();
+    const strategy = strategies[results.length];
 
-    html += `<div class="rec-card">
-      <div class="group-title">第${i+1}注 · ${s.name}</div>
-      <div class="balls">${result.red.map(n => `<span class="ball-sm ball-red">${formatNum(n)}</span>`).join('')} + <span class="ball-sm ball-blue">${formatNum(result.blue)}</span></div>
-      <div class="detail">
-        和值:${sum} | 跨度:${span} | 奇偶:${odd}:${6-odd} | 大小:${big}:${6-big}
-        ${hasConsec ? ' | ✅连号' : ''}${repeats>0 ? ' | ✅重号'+repeats : ''}
-        <br><span style="color:#666;">策略：${s.desc}</span>
-      </div>
-    </div>`;
+    let front = [];
+    // 同尾号：选2个，跨区间
+    if (sameTail !== null) {
+      const sameNums = [];
+      for (let i = 1; i <= 35; i++) if (getTail(i) === sameTail) sameNums.push(i);
+      // 选一小一大
+      const small = sameNums.filter(n => n <= 18);
+      const big = sameNums.filter(n => n > 18);
+      if (small.length > 0 && big.length > 0) {
+        front.push(small[Math.floor(Math.random() * small.length)]);
+        front.push(big[Math.floor(Math.random() * big.length)]);
+      } else if (sameNums.length >= 2) {
+        front.push(sameNums[0], sameNums[1]);
+      }
+    }
+
+    // 其余尾数各选1个
+    const otherTails = tails.filter(t => t !== sameTail);
+    for (let t of otherTails) {
+      if (front.length >= 5) break;
+      const nums = [];
+      for (let i = 1; i <= 35; i++) if (getTail(i) === t && !front.includes(i)) nums.push(i);
+      if (nums.length > 0) {
+        const weights = nums.map(n => getWeight(n));
+        front.push(weightedPick(nums, weights));
+      }
+    }
+
+    // 如果还不满5个，从剩余号码中补
+    while (front.length < 5) {
+      const remain = [];
+      for (let i = 1; i <= 35; i++) if (!front.includes(i)) remain.push(i);
+      const weights = remain.map(n => getWeight(n));
+      front.push(weightedPick(remain, weights));
+    }
+
+    front = [...new Set(front)].sort((a,b)=>a-b).slice(0,5);
+
+    // 后区
+    let back = [];
+    const bCandidates = Array.from({length:12},(_,i)=>i+1);
+    const bWeights = bCandidates.map(n => getBackWeight(n));
+    back.push(weightedPick(bCandidates, bWeights));
+    let b2Candidates = bCandidates.filter(n => n !== back[0]);
+    const b2Weights = b2Candidates.map(n => getBackWeight(n));
+    back.push(weightedPick(b2Candidates, b2Weights));
+    back.sort((a,b)=>a-b);
+
+    if (validate(front, back)) {
+      const sum = front.reduce((a,b)=>a+b,0);
+      const span = front[4] - front[0];
+      const odd = front.filter(n => n%2===1).length;
+      const big = front.filter(n => n>=18).length;
+      let consec = false;
+      for (let i = 1; i < front.length; i++) if (front[i]-front[i-1]===1) { consec = true; break; }
+      let repeat = false;
+      front.forEach(n => { if (lastFront.includes(n)) repeat = true; });
+      results.push({
+        strategy: strategy.name, desc: strategy.desc,
+        front, back,
+        sum, span, odd, big, consec, repeat,
+        tails: [...new Set(front.map(getTail))].sort()
+      });
+    }
+  }
+
+  // 渲染
+  let html = `<table>
+    <tr><th>注数</th><th>策略</th><th>前区号码</th><th>后区</th><th>和值</th><th>跨度</th><th>奇偶</th><th>大小</th><th>连号</th><th>重号</th><th>尾数</th></tr>`;
+  results.forEach((r, i) => {
+    const frontBalls = r.front.map(n => `<span class="num-ball red">${String(n).padStart(2,'0')}</span>`).join('');
+    const backBalls = r.back.map(n => `<span class="num-ball blue">${String(n).padStart(2,'0')}</span>`).join('');
+    const even = 5 - r.odd;
+    html += `<tr>
+      <td>第${i+1}注</td>
+      <td><span class="tag tag-normal">${r.strategy}</span></td>
+      <td>${frontBalls}</td>
+      <td>${backBalls}</td>
+      <td>${r.sum}</td>
+      <td>${r.span}</td>
+      <td>${r.odd}:${even}</td>
+      <td>${r.big}:${5-r.big}</td>
+      <td>${r.consec?'✅':'❌'}</td>
+      <td>${r.repeat?'✅':'❌'}</td>
+      <td>${r.tails.map(t => `<span class="tag tag-${tailData.hot.includes(t)?'hot':tailData.warm.includes(t)?'warm':'cold'}">${t}</span>`).join('')}</td>
+    </tr>`;
   });
+  html += '</table>';
+  html += `<p style="font-size:11px;color:#555;margin-top:6px">共尝试 ${attempts} 次生成 | 当前尾数状态：${tailData.hot.map(t=>`尾${t}热`).concat(tailData.cold.map(t=>`尾${t}冷`)).join('、')}</p>`;
 
-  recEl.innerHTML = html;
-  toast('5注推荐已生成！');
+  document.getElementById('dlt-recommend').innerHTML = html;
+  document.getElementById('dlt-confirm').style.display = 'block';
+
+  // 暂存
+  s._pendingDLT = results;
+  saveStore(s);
 }
 
-function validateSSQ(red, recent) {
-  const sum = red.reduce((a,b)=>a+b,0);
-  if (sum < 70 || sum > 140) return false;
-  const span = Math.max(...red) - Math.min(...red);
-  if (span < 15 || span > 32) return false;
-  const odd = red.filter(n=>n%2===1).length;
-  if (odd === 0 || odd === 6) return false;
-  const z1 = red.filter(n=>n<=11).length;
-  const z2 = red.filter(n=>n>=12&&n<=22).length;
-  const z3 = red.filter(n=>n>=23).length;
-  if (z1 === 0 || z2 === 0 || z3 === 0) return false;
-  return true;
+// ========== 双色球生成 ==========
+function genSSQ() {
+  const s = getStore();
+  const recs = s.ssq.slice(-50);
+  if (recs.length < 5) return alert('至少需要 5 期数据');
+
+  const tailData = analyzeTailTrend(recs, 'ssq');
+  const redAll = recs.flatMap(r => r.red);
+  const blueAll = recs.flatMap(r => r.blue);
+  const rFreq = Array(34).fill(0);
+  const bFreq = Array(17).fill(0);
+  redAll.forEach(n => rFreq[n]++);
+  blueAll.forEach(n => bFreq[n]++);
+
+  const maxFreq = Math.max(...rFreq.slice(1,34));
+  const lastRed = recs[recs.length - 1].red;
+  const lastBlue = recs[recs.length - 1].blue;
+
+  // 红球尾数分析 - 分3尾区
+  const smallTail = [0,1,2,3], midTail = [4,5,6], bigTail = [7,8,9];
+
+  function getRedWeight(n) {
+    let w = 1;
+    if (rFreq[n] > maxFreq * 0.5) w += (rFreq[n] / maxFreq) * 2.5;
+    let miss = 0;
+    for (let i = recs.length - 1; i >= 0; i--) {
+      if (recs[i].red.includes(n)) break;
+      miss++;
+    }
+    if (miss >= 15) w += 2.0;
+    else if (miss >= 10) w += 1.5;
+    else if (miss >= 5) w += 0.8;
+    if (lastRed.includes(n)) w += 0.8;
+    lastRed.forEach(l => { if (Math.abs(n - l) === 1) w += 0.4; });
+    // 首尾尾数
+    if (n <= 3) w += 0.2;
+    const t = getTail(n);
+    if (tailData.hot.includes(t)) w += 0.5;
+    if (tailData.cold.includes(t) && miss >= 8) w += 0.6;
+    // 杀断尾区：若某尾区连续3期未出
+    const tailZone = smallTail.includes(t) ? 'small' : midTail.includes(t) ? 'mid' : 'big';
+    let zoneMiss = 0;
+    for (let i = recs.length - 1; i >= 0; i--) {
+      const hasZone = recs[i].red.some(r => {
+        const zt = getTail(r);
+        return (tailZone === 'small' && smallTail.includes(zt)) ||
+               (tailZone === 'mid' && midTail.includes(zt)) ||
+               (tailZone === 'big' && bigTail.includes(zt));
+      });
+      if (hasZone) break;
+      zoneMiss++;
+    }
+    if (zoneMiss >= 3) w *= 0.1; // 杀该区
+    return w;
+  }
+
+  function getBlueWeight(n) {
+    let w = 1;
+    if (bFreq[n] > 0) w += bFreq[n] * 1.5;
+    let miss = 0;
+    for (let i = recs.length - 1; i >= 0; i--) {
+      if (recs[i].blue.includes(n)) break;
+      miss++;
+    }
+    if (miss >= 5) w += 1.0;
+    if (lastBlue.includes(n)) w += 0.5;
+    // 蓝球奇偶交替
+    const lastOdd = lastBlue[0] % 2;
+    if (n % 2 !== lastOdd) w += 0.3;
+    return w;
+  }
+
+  function weightedPick(arr, weights) {
+    const total = weights.reduce((a,b)=>a+b,0);
+    let r = Math.random() * total;
+    for (let i = 0; i < arr.length; i++) {
+      r -= weights[i];
+      if (r <= 0) return arr[i];
+    }
+    return arr[arr.length - 1];
+  }
+
+  function validate(red, blue) {
+    if (red.length !== 6 || blue.length !== 1) return false;
+    const sum = red.reduce((a,b)=>a+b,0);
+    if (sum < 95 || sum > 125) return false;
+    const odd = red.filter(n => n%2===1).length;
+    if (odd === 0 || odd === 6) return false;
+    const big = red.filter(n => n>=17).length;
+    if (big === 0 || big === 6) return false;
+    // 三区
+    const z1 = red.filter(n => n<=11).length;
+    const z2 = red.filter(n => n>=12 && n<=22).length;
+    const z3 = red.filter(n => n>=23).length;
+    if (z1 === 0 || z2 === 0 || z3 === 0) return false;
+    // 尾数个数 4-5
+    const tails = new Set(red.map(getTail));
+    if (tails.size < 4 || tails.size > 5) return false;
+    // 同尾号：至少1组二同尾，禁止三同尾
+    const tailMap = {};
+    red.forEach(n => { const t = getTail(n); tailMap[t] = (tailMap[t]||0) + 1; });
+    const sameCounts = Object.values(tailMap);
+    if (sameCounts.filter(c => c >= 2).length === 0) return false;
+    if (sameCounts.some(c => c >= 3)) return false;
+    // 连号
+    let consec = false;
+    for (let i = 1; i < red.length; i++) if (red[i]-red[i-1]===1) { consec = true; break; }
+    if (!consec) return false;
+    // 后区
+    if (blue[0] < 1 || blue[0] > 16) return false;
+    return true;
+  }
+
+  const strategies = [
+    { name: '热尾主导+同尾回补', desc: '热尾号为主，搭配遗漏回补' },
+    { name: '均衡兜底+连号防守', desc: '三区均衡，倾向含连号' },
+    { name: '重号延续+大号拉伸', desc: '保留上期号码，跨度拉大' },
+    { name: '斜连追踪+跨度均衡', desc: '追踪斜连趋势' },
+    { name: '温号组合+遗漏集中', desc: '温号为主，高遗漏号集中回补' }
+  ];
+
+  let results = [];
+  let attempts = 0;
+  const maxAttempts = 500;
+
+  while (results.length < 5 && attempts < maxAttempts) {
+    attempts++;
+    const strategy = strategies[results.length];
+
+    // 选尾数：4-5个，热2-3+温1+冷0-1
+    let tails = [];
+    const hotCopy = [...tailData.hot];
+    const warmCopy = [...tailData.warm];
+    const coldCopy = [...tailData.cold];
+
+    // 同尾
+    let sameTail = null;
+    if (hotCopy.length >= 1) { sameTail = hotCopy[0]; tails.push(sameTail); hotCopy.shift(); }
+    else if (warmCopy.length >= 1) { sameTail = warmCopy[0]; tails.push(sameTail); warmCopy.shift(); }
+
+    while (tails.length < 3 && hotCopy.length > 0) { tails.push(hotCopy.shift()); }
+    while (tails.length < 4 && warmCopy.length > 0) { tails.push(warmCopy.shift()); }
+    if (coldCopy.length > 0 && Math.random() < 0.3) { tails.push(coldCopy[0]); }
+
+    for (let i = 0; tails.length < 4 && i < 10; i++) {
+      if (!tails.includes(i)) tails.push(i);
+    }
+
+    let red = [];
+    // 同尾号2个，跨区
+    if (sameTail !== null) {
+      const sameNums = [];
+      for (let i = 1; i <= 33; i++) if (getTail(i) === sameTail) sameNums.push(i);
+      const small = sameNums.filter(n => n <= 16);
+      const big = sameNums.filter(n => n > 16);
+      if (small.length > 0 && big.length > 0) {
+        red.push(small[Math.floor(Math.random() * small.length)]);
+        red.push(big[Math.floor(Math.random() * big.length)]);
+      } else if (sameNums.length >= 2) {
+        red.push(sameNums[0], sameNums[1]);
+      }
+    }
+
+    // 其余尾数各1个
+    const otherTails = tails.filter(t => t !== sameTail);
+    for (let t of otherTails) {
+      if (red.length >= 6) break;
+      const nums = [];
+      for (let i = 1; i <= 33; i++) if (getTail(i) === t && !red.includes(i)) nums.push(i);
+      if (nums.length > 0) {
+        const weights = nums.map(n => getRedWeight(n));
+        red.push(weightedPick(nums, weights));
+      }
+    }
+
+    while (red.length < 6) {
+      const remain = [];
+      for (let i = 1; i <= 33; i++) if (!red.includes(i)) remain.push(i);
+      const weights = remain.map(n => getRedWeight(n));
+      red.push(weightedPick(remain, weights));
+    }
+
+    red = [...new Set(red)].sort((a,b)=>a-b).slice(0,6);
+
+    // 蓝球
+    let blue = [];
+    const bCandidates = Array.from({length:16},(_,i)=>i+1);
+    const bWeights = bCandidates.map(n => getBlueWeight(n));
+    blue.push(weightedPick(bCandidates, bWeights));
+    blue.sort((a,b)=>a-b);
+
+    if (validate(red, blue)) {
+      const sum = red.reduce((a,b)=>a+b,0);
+      const span = red[5] - red[0];
+      const odd = red.filter(n => n%2===1).length;
+      const big = red.filter(n => n>=17).length;
+      let consec = false;
+      for (let i = 1; i < red.length; i++) if (red[i]-red[i-1]===1) { consec = true; break; }
+      let repeat = false;
+      red.forEach(n => { if (lastRed.includes(n)) repeat = true; });
+      results.push({
+        strategy: strategy.name, desc: strategy.desc,
+        red, blue,
+        sum, span, odd, big, consec, repeat,
+        tails: [...new Set(red.map(getTail))].sort()
+      });
+    }
+  }
+
+  let html = `<table>
+    <tr><th>注数</th><th>策略</th><th>红球</th><th>蓝球</th><th>和值</th><th>跨度</th><th>奇偶</th><th>大小</th><th>连号</th><th>重号</th><th>尾数</th></tr>`;
+  results.forEach((r, i) => {
+    const redBalls = r.red.map(n => `<span class="num-ball red">${String(n).padStart(2,'0')}</span>`).join('');
+    const blueBall = `<span class="num-ball blue">${String(r.blue[0]).padStart(2,'0')}</span>`;
+    const even = 6 - r.odd;
+    html += `<tr>
+      <td>第${i+1}注</td>
+      <td><span class="tag tag-normal">${r.strategy}</span></td>
+      <td>${redBalls}</td>
+      <td>${blueBall}</td>
+      <td>${r.sum}</td>
+      <td>${r.span}</td>
+      <td>${r.odd}:${even}</td>
+      <td>${r.big}:${6-r.big}</td>
+      <td>${r.consec?'✅':'❌'}</td>
+      <td>${r.repeat?'✅':'❌'}</td>
+      <td>${r.tails.map(t => `<span class="tag tag-${tailData.hot.includes(t)?'hot':tailData.warm.includes(t)?'warm':'cold'}">${t}</span>`).join('')}</td>
+    </tr>`;
+  });
+  html += '</table>';
+  html += `<p style="font-size:11px;color:#555;margin-top:6px">共尝试 ${attempts} 次生成 | 尾数热:${tailData.hot.join(',')} 冷:${tailData.cold.join(',')}</p>`;
+
+  document.getElementById('ssq-recommend').innerHTML = html;
+  document.getElementById('ssq-confirm').style.display = 'block';
+
+  s._pendingSSQ = results;
+  saveStore(s);
 }
 
-// ==================== 开奖核对 ====================
+// ========== 确认保存 & 重新生成 ==========
+function confirmDLT() {
+  const s = getStore();
+  if (!s._pendingDLT) return alert('没有待保存的推荐');
+  s.dltRec = { results: s._pendingDLT, time: Date.now(), issue: s.dlt.length > 0 ? s.dlt[s.dlt.length-1].issue : '' };
+  delete s._pendingDLT;
+  saveStore(s);
+  renderMyRec('dlt');
+  document.getElementById('dlt-confirm').style.display = 'none';
+  alert('✅ 大乐透推荐已保存！');
+}
+
+function confirmSSQ() {
+  const s = getStore();
+  if (!s._pendingSSQ) return alert('没有待保存的推荐');
+  s.ssqRec = { results: s._pendingSSQ, time: Date.now(), issue: s.ssq.length > 0 ? s.ssq[s.ssq.length-1].issue : '' };
+  delete s._pendingSSQ;
+  saveStore(s);
+  renderMyRec('ssq');
+  document.getElementById('ssq-confirm').style.display = 'none';
+  alert('✅ 双色球推荐已保存！');
+}
+
+function regenerateDLT() {
+  const s = getStore();
+  delete s._pendingDLT;
+  saveStore(s);
+  genDLT();
+}
+
+function regenerateSSQ() {
+  const s = getStore();
+  delete s._pendingSSQ;
+  saveStore(s);
+  genSSQ();
+}
+
+function renderMyRec(type) {
+  const s = getStore();
+  const rec = type === 'dlt' ? s.dltRec : s.ssqRec;
+  const container = document.getElementById(type + '-myrec');
+  if (!rec || !rec.results) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div><p>暂无保存的推荐，请先生成并确认</p></div>';
+    return;
+  }
+  const time = new Date(rec.time).toLocaleString('zh-CN');
+  let html = `<p style="font-size:12px;color:#888">保存时间：${time}${rec.issue ? ' | 基于期号：' + rec.issue : ''}</p>`;
+  html += '<table><tr><th>注数</th><th>策略</th>';
+  if (type === 'dlt') {
+    html += '<th>前区</th><th>后区</th><th>和值</th><th>跨度</th><th>尾数</th></tr>';
+  } else {
+    html += '<th>红球</th><th>蓝球</th><th>和值</th><th>跨度</th><th>尾数</th></tr>';
+  }
+  rec.results.forEach((r, i) => {
+    const balls1 = (type === 'dlt' ? r.front : r.red).map(n => `<span class="num-ball red">${String(n).padStart(2,'0')}</span>`).join('');
+    const balls2 = (type === 'dlt' ? r.back : r.blue).map(n => `<span class="num-ball blue">${String(n).padStart(2,'0')}</span>`).join('');
+    html += `<tr><td>第${i+1}注</td><td><span class="tag tag-normal">${r.strategy}</span></td><td>${balls1}</td><td>${balls2}</td><td>${r.sum}</td><td>${r.span}</td><td>${r.tails.map(t => `<span class="tag tag-hot">${t}</span>`).join('')}</td></tr>`;
+  });
+  html += '</table>';
+  html += `<button class="btn btn-danger" style="margin-top:8px" onclick="clearMyRec('${type}')">🗑️ 清除当前推荐</button>`;
+  container.innerHTML = html;
+}
+
+function clearMyRec(type) {
+  if (!confirm('确定清除已保存的推荐？')) return;
+  const s = getStore();
+  if (type === 'dlt') delete s.dltRec;
+  else delete s.ssqRec;
+  saveStore(s);
+  renderMyRec(type);
+}
+
+// ========== 开奖核对 ==========
 function checkDLT() {
+  const issue = document.getElementById('check-dlt-issue').value.trim();
   const front = parseNums(document.getElementById('check-dlt-front').value);
   const back = parseNums(document.getElementById('check-dlt-back').value);
-  if (front.length !== 5 || back.length !== 2) { toast('请输入5+2个号码'); return; }
-  const data = getDLTData();
-  if (!data.length) { toast('请先添加数据'); return; }
+  if (front.length !== 5 || back.length !== 2) return alert('请输入正确的开奖号码');
 
-  const el = document.getElementById('check-dlt-result');
-  const drawFront = new Set(front);
-  const drawBack = new Set(back);
+  const s = getStore();
+  if (!s.dltRec || !s.dltRec.results) return alert('请先生成并保存推荐号码');
 
-  let html = `<div class="card" style="margin-top:10px;"><h4>🎱 大乐透核对结果</h4>`;
-  html += `<div style="margin:8px 0;">开奖号：${front.map(n=>`<span class="ball-sm ball-red">${formatNum(n)}</span>`).join('')} + ${back.map(n=>`<span class="ball-sm ball-blue">${formatNum(n)}</span>`).join('')}</div>`;
+  let html = `<div class="section-title">🔍 开奖核对结果 — ${issue}</div>`;
+  const fSet = new Set(front), bSet = new Set(back);
 
-  const recent5 = data.slice(-5);
-  let totalPrize = 0;
-  recent5.forEach((d, i) => {
-    const hitFront = d.front.filter(n => drawFront.has(n));
-    const hitBack = d.back.filter(n => drawBack.has(n));
-    const prize = calcDLTPrize(hitFront.length, hitBack.length);
-    totalPrize += prize;
-    html += `<div style="padding:8px;border-bottom:1px solid #1a2255;">
-      <div>第${i+1}注（期号${d.period}）：
-        ${d.front.map(n => `<span class="ball-sm ${drawFront.has(n)?'ball-green ball-hit':'ball-red'}">${formatNum(n)}</span>`).join('')}
-        + ${d.back.map(n => `<span class="ball-sm ${drawBack.has(n)?'ball-green ball-hit':'ball-blue'}">${formatNum(n)}</span>`).join('')}
-      </div>
-      <div style="font-size:12px;color:#aaa;margin-top:4px;">命中前区${hitFront.length}个、后区${hitBack.length}个 → <span style="color:#ff6b35;font-weight:bold;">${prize > 0 ? '中奖 '+prize+'元' : '未中奖'}</span></div>
+  s.dltRec.results.forEach((r, i) => {
+    let hitFront = [], hitBack = [];
+    r.front.forEach(n => { if (fSet.has(n)) hitFront.push(n); });
+    r.back.forEach(n => { if (bSet.has(n)) hitBack.push(n); });
+
+    const hitF = hitFront.length, hitB = hitBack.length;
+    let level = '未中奖';
+    if (hitF === 5 && hitB === 2) level = '🏆 一等奖';
+    else if (hitF === 5 && hitB === 1) level = '🥈 二等奖';
+    else if (hitF === 5) level = '🥉 三等奖';
+    else if (hitF === 4 && hitB >= 1) level = '四等奖';
+    else if (hitF === 4 || (hitF === 3 && hitB >= 1)) level = '五等奖';
+    else if (hitF === 2 && hitB === 2) level = '六等奖';
+    else if ((hitF === 3) || (hitF === 1 && hitB === 2) || (hitF === 2 && hitB === 1) || (hitB === 2)) level = '六等奖';
+
+    const frontBalls = r.front.map(n => {
+      const hit = hitFront.includes(n);
+      return `<span class="num-ball red ${hit?'hit':''}">${String(n).padStart(2,'0')}</span>`;
+    }).join('');
+    const backBalls = r.back.map(n => {
+      const hit = hitBack.includes(n);
+      return `<span class="num-ball blue ${hit?'hit':''}">${String(n).padStart(2,'0')}</span>`;
+    }).join('');
+
+    html += `<div class="card" style="margin:6px 0;padding:10px">
+      <p><b>第${i+1}注</b> — <span class="tag tag-${hitF >= 4 ? 'hot' : hitF >= 2 ? 'warm' : 'cold'}">${level}</span></p>
+      <p>命中前区：${hitF}/5 | 命中后区：${hitB}/2</p>
+      <div>${frontBalls} ${backBalls}</div>
     </div>`;
   });
-  html += `<div style="padding:8px;font-weight:bold;color:#ff6b35;font-size:16px;">合计奖金：${totalPrize}元</div></div>`;
-  el.innerHTML = html;
+
+  // 自动归档
+  html += `<div class="confirm-banner" style="margin-top:10px">
+    <p>核对完成！是否将本期开奖号加入历史记录？</p>
+    <button class="btn btn-success" onclick="archiveDLT('${issue}', '${front.join(',')}', '${back.join(',')}')">✅ 加入历史记录</button>
+    <button class="btn btn-secondary" onclick="this.parentElement.style.display='none'">暂不</button>
+  </div>`;
+
+  document.getElementById('check-dlt-result').innerHTML = html;
 }
 
-function calcDLTPrize(hf, hb) {
-  if (hf===5 && hb===2) return 10000000;
-  if (hf===5 && hb===1) return 1000000;
-  if (hf===5 && hb===0) return 10000;
-  if (hf===4 && hb===2) return 3000;
-  if (hf===4 && hb===1) return 300;
-  if (hf===3 && hb===2) return 200;
-  if (hf===4 && hb===0) return 100;
-  if (hf===3 && hb===1 || hf===2&&hb===2) return 15;
-  if (hf===3&&hb===0 || hf===2&&hb===1 || hf===1&&hb===2 || hf===0&&hb===2) return 5;
-  return 0;
+function archiveDLT(issue, frontStr, backStr) {
+  const s = getStore();
+  const front = frontStr.split(',').map(n => parseInt(n));
+  const back = backStr.split(',').map(n => parseInt(n));
+  s.dlt.push({ issue, front, back, time: Date.now() });
+  saveStore(s);
+  renderHistory('dlt');
+  document.getElementById('history-count').textContent = s.dlt.length + s.ssq.length;
+  document.getElementById('check-dlt-result').innerHTML += '<div class="success" style="margin-top:8px">✅ 已自动加入大乐透历史记录！下次生成推荐将基于更新后的数据。</div>';
 }
 
 function checkSSQ() {
+  const issue = document.getElementById('check-ssq-issue').value.trim();
   const red = parseNums(document.getElementById('check-ssq-red').value);
   const blue = parseNums(document.getElementById('check-ssq-blue').value);
-  if (red.length !== 6 || blue.length !== 1) { toast('请输入6个红球+1个蓝球'); return; }
-  const data = getSSQData();
-  if (!data.length) { toast('请先添加数据'); return; }
+  if (red.length !== 6 || blue.length !== 1) return alert('请输入正确的开奖号码');
 
-  const el = document.getElementById('check-ssq-result');
-  const drawRed = new Set(red);
-  const drawBlue = blue[0];
+  const s = getStore();
+  if (!s.ssqRec || !s.ssqRec.results) return alert('请先生成并保存推荐号码');
 
-  let html = `<div class="card" style="margin-top:10px;"><h4>🔴 双色球核对结果</h4>`;
-  html += `<div style="margin:8px 0;">开奖号：${red.map(n=>`<span class="ball-sm ball-red">${formatNum(n)}</span>`).join('')} + <span class="ball-sm ball-blue">${formatNum(drawBlue)}</span></div>`;
+  let html = `<div class="section-title">🔍 开奖核对结果 — ${issue}</div>`;
+  const rSet = new Set(red), bSet = new Set(blue);
 
-  const recent5 = data.slice(-5);
-  let totalPrize = 0;
-  recent5.forEach((d, i) => {
-    const hitRed = d.red.filter(n => drawRed.has(n));
-    const hitBlue = d.blue === drawBlue;
-    const prize = calcSSQPrize(hitRed.length, hitBlue);
-    totalPrize += prize;
-    html += `<div style="padding:8px;border-bottom:1px solid #1a2255;">
-      <div>第${i+1}注（期号${d.period}）：
-        ${d.red.map(n => `<span class="ball-sm ${drawRed.has(n)?'ball-green ball-hit':'ball-red'}">${formatNum(n)}</span>`).join('')}
-        + <span class="ball-sm ${hitBlue?'ball-green ball-hit':'ball-blue'}">${formatNum(d.blue)}</span>
-      </div>
-      <div style="font-size:12px;color:#aaa;margin-top:4px;">命中红球${hitRed.length}个、蓝球${hitBlue?'1个':'0个'} → <span style="color:#ff6b35;font-weight:bold;">${prize > 0 ? '中奖 '+prize+'元' : '未中奖'}</span></div>
+  s.ssqRec.results.forEach((r, i) => {
+    let hitRed = [], hitBlue = [];
+    r.red.forEach(n => { if (rSet.has(n)) hitRed.push(n); });
+    r.blue.forEach(n => { if (bSet.has(n)) hitBlue.push(n); });
+
+    const hitR = hitRed.length, hitB = hitBlue.length;
+    let level = '未中奖';
+    if (hitR === 6 && hitB === 1) level = '🏆 一等奖';
+    else if (hitR === 6) level = '🥈 二等奖';
+    else if (hitR === 5 && hitB === 1) level = '🥉 三等奖';
+    else if (hitR === 5) level = '四等奖';
+    else if (hitR === 4 && hitB === 1) level = '五等奖';
+    else if (hitR === 4) level = '六等奖';
+
+    const redBalls = r.red.map(n => {
+      const hit = hitRed.includes(n);
+      return `<span class="num-ball red ${hit?'hit':''}">${String(n).padStart(2,'0')}</span>`;
+    }).join('');
+    const blueBall = `<span class="num-ball blue ${hitB?'hit':''}">${String(r.blue[0]).padStart(2,'0')}</span>`;
+
+    html += `<div class="card" style="margin:6px 0;padding:10px">
+      <p><b>第${i+1}注</b> — <span class="tag tag-${hitR >= 5 ? 'hot' : hitR >= 3 ? 'warm' : 'cold'}">${level}</span></p>
+      <p>命中红球：${hitR}/6 | 命中蓝球：${hitB}/1</p>
+      <div>${redBalls} ${blueBall}</div>
     </div>`;
   });
-  html += `<div style="padding:8px;font-weight:bold;color:#ff6b35;font-size:16px;">合计奖金：${totalPrize}元</div></div>`;
-  el.innerHTML = html;
+
+  html += `<div class="confirm-banner" style="margin-top:10px">
+    <p>核对完成！是否将本期开奖号加入历史记录？</p>
+    <button class="btn btn-success" onclick="archiveSSQ('${issue}', '${red.join(',')}', '${blue.join(',')}')">✅ 加入历史记录</button>
+    <button class="btn btn-secondary" onclick="this.parentElement.style.display='none'">暂不</button>
+  </div>`;
+
+  document.getElementById('check-ssq-result').innerHTML = html;
 }
 
-function calcSSQPrize(hr, hb) {
-  if (hr===6 && hb) return 5000000;
-  if (hr===6) return 100000;
-  if (hr===5 && hb) return 3000;
-  if (hr===5) return 200;
-  if (hr===4 && hb) return 200;
-  if (hr===4) return 10;
-  if (hr===3 && hb) return 10;
-  if (hr===2 && hb || hr===1&&hb || hb) return 5;
-  return 0;
+function archiveSSQ(issue, redStr, blueStr) {
+  const s = getStore();
+  const red = redStr.split(',').map(n => parseInt(n));
+  const blue = blueStr.split(',').map(n => parseInt(n));
+  s.ssq.push({ issue, red, blue, time: Date.now() });
+  saveStore(s);
+  renderHistory('ssq');
+  document.getElementById('history-count').textContent = s.dlt.length + s.ssq.length;
+  document.getElementById('check-ssq-result').innerHTML += '<div class="success" style="margin-top:8px">✅ 已自动加入双色球历史记录！下次生成推荐将基于更新后的数据。</div>';
 }
 
-// ==================== 半自动联网（增强版）====================
-async function fetchLatestDLT() {
-  const el = document.getElementById('dlt-fetch-loading');
-  el.style.display = 'inline';
-  const sources = [
-    { name: '福彩官网API', url: 'https://www.lottery.gov.cn/api/lottery_kj_detail_new.jspx?_ltype=4&_term=', parser: parseDLTSource1 },
-    { name: '中彩网API', url: 'https://www.cwl.gov.cn/cwl_admin/front/cwlkj/search/kjxx/findDrawNotice?name=ssq&issueCount=&issueStart=&issueEnd=&dayStart=&dayEnd=&pageNo=1&pageSize=1&week=&systemType=PC', parser: parseDLTSource2 },
-    { name: '备用API', url: 'https://api.apiopen.top/api/LotteryInfo?lotteryId=1', parser: parseDLTSource3 },
-  ];
-
-  for (const src of sources) {
-    try {
-      const resp = await fetch(src.url, { mode: 'cors', signal: AbortSignal.timeout(5000) });
-      if (resp.ok) {
-        const data = await resp.json();
-        const result = src.parser(data);
-        if (result) {
-          document.getElementById('dlt-period').value = result.period;
-          document.getElementById('dlt-front').value = result.front.map(n => formatNum(n)).join(' ');
-          document.getElementById('dlt-back').value = result.back.map(n => formatNum(n)).join(' ');
-          el.style.display = 'none';
-          toast(`✅ [${src.name}] 已获取最新大乐透开奖号！`);
-          return;
-        }
-      }
-    } catch(e) { continue; }
-  }
-
-  el.style.display = 'none';
-  toast('所有API源均失败，请手动输入或使用批量导入');
-}
-
-function parseDLTSource1(data) {
-  const d = data.data || data.result || (Array.isArray(data) ? data[0] : null);
-  if (!d) return null;
-  let period, front, back;
-  if (d.preDrawCode) {
-    const nums = d.preDrawCode.split(/[\s,，]+/).map(Number);
-    period = d.term || d.preDrawIssue || d.issue || '';
-    front = nums.slice(0, 5);
-    back = nums.slice(5, 7);
-  } else if (d.frontCode) {
-    period = d.issue || d.term || '';
-    front = d.frontCode.split(/[\s,，]+/).map(Number);
-    back = d.backCode.split(/[\s,，]+/).map(Number);
-  }
-  if (front && front.length === 5 && back && back.length >= 2) return { period: String(period), front, back };
-  return null;
-}
-
-function parseDLTSource2(data) {
-  const d = data.result || data.data;
-  if (Array.isArray(d) && d[0]) {
-    const item = d[0];
-    const period = item.issue || '';
-    let front, back;
-    if (item.frontCode) { front = item.frontCode.split(/[\s,，]+/).map(Number); back = item.backCode.split(/[\s,，]+/).map(Number); }
-    else if (item.preDrawCode) { const nums = item.preDrawCode.split(/[\s,，]+/).map(Number); front = nums.slice(0,5); back = nums.slice(5,7); }
-    if (front && front.length === 5) return { period: String(period), front, back };
-  }
-  return null;
-}
-
-function parseDLTSource3(data) {
-  const d = data.result || data.data;
-  if (d && d.preDrawCode) {
-    const nums = d.preDrawCode.split(/[\s,，]+/).map(Number);
-    return { period: String(d.issue || d.term || ''), front: nums.slice(0,5), back: nums.slice(5,7) };
-  }
-  return null;
-}
-
-async function fetchLatestSSQ() {
-  const el = document.getElementById('ssq-fetch-loading');
-  el.style.display = 'inline';
-  const sources = [
-    { name: '福彩官网API', url: 'https://www.lottery.gov.cn/api/lottery_kj_detail_new.jspx?_ltype=1&_term=', parser: parseSSQSource1 },
-    { name: '中彩网API', url: 'https://www.cwl.gov.cn/cwl_admin/front/cwlkj/search/kjxx/findDrawNotice?name=ssq&issueCount=&issueStart=&issueEnd=&dayStart=&dayEnd=&pageNo=1&pageSize=1&week=&systemType=PC', parser: parseSSQSource2 },
-    { name: '备用API', url: 'https://api.apiopen.top/api/LotteryInfo?lotteryId=2', parser: parseSSQSource3 },
-  ];
-
-  for (const src of sources) {
-    try {
-      const resp = await fetch(src.url, { mode: 'cors', signal: AbortSignal.timeout(5000) });
-      if (resp.ok) {
-        const data = await resp.json();
-        const result = src.parser(data);
-        if (result) {
-          document.getElementById('ssq-period').value = result.period;
-          document.getElementById('ssq-red').value = result.red.map(n => formatNum(n)).join(' ');
-          document.getElementById('ssq-blue').value = formatNum(result.blue);
-          el.style.display = 'none';
-          toast(`✅ [${src.name}] 已获取最新双色球开奖号！`);
-          return;
-        }
-      }
-    } catch(e) { continue; }
-  }
-
-  el.style.display = 'none';
-  toast('所有API源均失败，请手动输入或使用批量导入');
-}
-
-function parseSSQSource1(data) {
-  const d = data.data || data.result || (Array.isArray(data) ? data[0] : null);
-  if (!d) return null;
-  let period, red, blue;
-  if (d.preDrawCode) {
-    const nums = d.preDrawCode.split(/[\s,，]+/).map(Number);
-    period = d.term || d.preDrawIssue || d.issue || '';
-    red = nums.slice(0, 6);
-    blue = nums[6] || d.backCode;
-  } else if (d.redCode) {
-    period = d.issue || '';
-    red = d.redCode.split(/[\s,，]+/).map(Number);
-    blue = d.blueCode || d.backCode;
-  }
-  if (red && red.length === 6 && blue) return { period: String(period), red, blue };
-  return null;
-}
-
-function parseSSQSource2(data) {
-  const d = data.result || data.data;
-  if (Array.isArray(d) && d[0]) {
-    const item = d[0];
-    const period = item.issue || '';
-    let red, blue;
-    if (item.redCode) { red = item.redCode.split(/[\s,，]+/).map(Number); blue = item.blueCode || item.backCode; }
-    else if (item.preDrawCode) { const nums = item.preDrawCode.split(/[\s,，]+/).map(Number); red = nums.slice(0,6); blue = nums[6]; }
-    if (red && red.length === 6) return { period: String(period), red, blue };
-  }
-  return null;
-}
-
-function parseSSQSource3(data) {
-  const d = data.result || data.data;
-  if (d && d.preDrawCode) {
-    const nums = d.preDrawCode.split(/[\s,，]+/).map(Number);
-    return { period: String(d.issue || ''), red: nums.slice(0,6), blue: nums[6] };
-  }
-  return null;
-}
-
-// ==================== 数据管理 ====================
+// ========== 数据管理 ==========
 function clearAllData() {
-  if (confirm('确定清除所有数据吗？此操作不可恢复！')) {
-    localStorage.removeItem('dlt_data');
-    localStorage.removeItem('ssq_data');
-    renderDLTHistory(); renderSSQHistory();
-    renderDLTAnalysis(); renderSSQAnalysis();
-    document.getElementById('dlt-recommend').innerHTML = '<div class="empty-state"><div class="icon">🎲</div>点击上方按钮生成推荐</div>';
-    document.getElementById('ssq-recommend').innerHTML = '<div class="empty-state"><div class="icon">🎲</div>点击上方按钮生成推荐</div>';
-    toast('数据已清除');
-  }
+  if (!confirm('确定清除所有数据？此操作不可恢复！')) return;
+  localStorage.removeItem(DATA_KEY);
+  document.getElementById('dlt-history-list').innerHTML = '';
+  document.getElementById('ssq-history-list').innerHTML = '';
+  document.getElementById('dlt-recommend').innerHTML = '';
+  document.getElementById('ssq-recommend').innerHTML = '';
+  document.getElementById('dlt-myrec').innerHTML = '暂无保存的推荐';
+  document.getElementById('ssq-myrec').innerHTML = '暂无保存的推荐';
+  document.getElementById('dlt-confirm').style.display = 'none';
+  document.getElementById('ssq-confirm').style.display = 'none';
+  document.getElementById('history-count').textContent = '0';
+  alert('✅ 所有数据已清除');
 }
 
 function exportData() {
-  const data = { dlt: getDLTData(), ssq: getSSQData(), exportTime: new Date().toISOString() };
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const s = getStore();
+  const json = JSON.stringify(s, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `lottery_data_${Date.now()}.json`;
+  a.href = url;
+  a.download = `lottery-backup-${new Date().toISOString().slice(0,10)}.json`;
   a.click();
-  toast('数据已导出');
+  URL.revokeObjectURL(url);
 }
 
 function importData(e) {
   const file = e.target.files[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = () => {
+  reader.onload = function(evt) {
     try {
-      const data = JSON.parse(reader.result);
-      if (data.dlt) saveDLTData(data.dlt);
-      if (data.ssq) saveSSQData(data.ssq);
-      renderDLTHistory(); renderSSQHistory();
-      renderDLTAnalysis(); renderSSQAnalysis();
-      toast('数据导入成功！');
-    } catch { toast('文件格式错误'); }
+      const data = JSON.parse(evt.target.result);
+      localStorage.setItem(DATA_KEY, JSON.stringify(data));
+      loadAllData();
+      alert('✅ 数据导入成功！');
+    } catch {
+      alert('❌ 文件格式错误，请检查');
+    }
   };
   reader.readAsText(file);
 }
 
-// ==================== 拖拽上传支持 ====================
-const fileDropArea = document.getElementById('file-drop-area');
-if (fileDropArea) {
-  fileDropArea.addEventListener('dragover', (e) => { e.preventDefault(); fileDropArea.classList.add('dragover'); });
-  fileDropArea.addEventListener('dragleave', () => fileDropArea.classList.remove('dragover'));
-  fileDropArea.addEventListener('drop', (e) => { e.preventDefault(); fileDropArea.classList.remove('dragover'); document.getElementById('batch-file').files = e.dataTransfer.files; batchImportFile({ target: { files: e.dataTransfer.files } }); });
+// ========== 导航 ==========
+function scrollToSection(sec) {
+  if (sec === 'top') window.scrollTo({ top: 0, behavior: 'smooth' });
+  else if (sec === 'check') document.getElementById('check-section').scrollIntoView({ behavior: 'smooth' });
+  else if (sec === 'history') {
+    document.querySelectorAll('.card')[document.querySelectorAll('.card').length - 1].scrollIntoView({ behavior: 'smooth' });
+  }
 }
 
-const ocrDropArea = document.getElementById('ocr-drop-area');
-if (ocrDropArea) {
-  ocrDropArea.addEventListener('dragover', (e) => { e.preventDefault(); ocrDropArea.classList.add('dragover'); });
-  ocrDropArea.addEventListener('dragleave', () => ocrDropArea.classList.remove('dragover'));
-  ocrDropArea.addEventListener('drop', (e) => { e.preventDefault(); ocrDropArea.classList.remove('dragover'); document.getElementById('ocr-file').files = e.dataTransfer.files; batchOCR({ target: { files: e.dataTransfer.files } }); });
-}
-
-// ==================== 初始化 ====================
-renderDLTHistory(); renderSSQHistory();
-renderDLTAnalysis(); renderSSQAnalysis();
+// ========== 初始化 ==========
+initPassword();
 </script>
-<!-- Tesseract.js for OCR (loaded on demand) -->
 </body>
 </html>
