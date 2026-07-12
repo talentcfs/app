@@ -27,9 +27,6 @@ table{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px}
 th,td{border:1px solid #2a3580;padding:6px 4px;text-align:center}
 .red{color:#ff5c5c}.blue{color:#7c8bff}.hot{color:#ffd54f}.cold{color:#4dd0e1}
 .hidden{display:none}
-.mask{position:fixed;inset:0;background:linear-gradient(135deg,#0a0e27,#111640);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:99999;padding:20px}
-.mask h2{color:var(--pri);font-size:26px;margin-bottom:6px}
-.mask p{color:var(--mut);font-size:13px;margin-bottom:24px}
 .tab-bar{position:fixed;bottom:0;left:0;right:0;display:flex;background:#111640;border-top:1px solid #222;z-index:100;padding-bottom:env(safe-area-inset-bottom,0)}
 .tab-bar button{flex:1;padding:9px 0;background:none;border:none;color:var(--mut);font-size:11px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}
 .tab-bar button.on{color:var(--pri)}
@@ -38,17 +35,7 @@ th,td{border:1px solid #2a3580;padding:6px 4px;text-align:center}
 </head>
 <body>
 
-<div class="mask" id="mask">
-  <div style="font-size:64px;margin-bottom:18px">🔒</div>
-  <h2>智能选号助手</h2>
-  <p>请输入访问密码以继续</p>
-  <input id="pwd" type="password" placeholder="6位密码" maxlength="6" style="max-width:260px;text-align:center">
-  <button onclick="checkPwd()" style="max-width:260px">解锁进入</button>
-  <p id="pwderr" style="color:#ff1744;display:none;margin-top:10px">密码错误</p>
-  <p style="color:#555;font-size:11px;margin-top:24px">默认密码 123456</p>
-</div>
-
-<div class="container hidden" id="main">
+<div class="container" id="main">
   <h1>🎯 智能选号助手</h1>
 
   <div id="t-home">
@@ -158,19 +145,11 @@ const MAX = {
 };
 
 // ==================== 数据 ====================
-let D = load() || {pwd:'123456', hist:{dlt:[],ssq:[],p3:[],p5:[]}, cur:{dlt:null,ssq:null,p3:null,p5:null}, lock:{dlt:false,ssq:false,p3:false,p5:false}, set:{tail:true,auto:true}};
+let D = load() || {hist:{dlt:[],ssq:[],p3:[],p5:[]}, cur:{dlt:null,ssq:null,p3:null,p5:null}, lock:{dlt:false,ssq:false,p3:false,p5:false}, set:{tail:true,auto:true}};
 const $ = id => document.getElementById(id);
 
 function load(){ try{ return JSON.parse(localStorage.getItem('lottoApp')); }catch(e){ return null; } }
 function save(){ localStorage.setItem('lottoApp', JSON.stringify(D)); }
-
-function checkPwd(){
-  if($('pwd').value === D.pwd){
-    $('mask').style.display='none';
-    $('main').classList.remove('hidden');
-    initUI();
-  } else { $('pwderr').style.display='block'; }
-}
 
 function go(t){
   ['home','gen','my','imp','chk','set'].forEach(x=>$('t-'+x).classList.add('hidden'));
@@ -574,6 +553,9 @@ function initUI(){
   $('sAuto').onchange=()=>{D.set.auto=$('sAuto').checked;save();};
   onImpType(); onChkType(); renderStat();
 }
+
+// 页面加载即初始化（已移除密码）
+initUI();
 </script>
 </body>
 </html>
