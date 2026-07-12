@@ -6,8 +6,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>🎯 智能选号助手</title>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<!-- 外部库按需加载，失败不影响核心选号 -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" onerror="window.__noXlsx=true"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" onerror="window.__noCanvas=true"></script>
 <style>
 :root{--bg:#0a0e27;--card:#141b4a;--pri:#ff6b35;--dan:#ff1744;--suc:#00c853;--txt:#e0e0e0;--mut:#888;--blue:#7c8bff}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -20,7 +21,7 @@ input,select,textarea,button{width:100%;padding:11px 12px;border-radius:8px;bord
 button{background:linear-gradient(135deg,#ff6b35,#ff3c00);border:none;font-weight:600;cursor:pointer}
 button:active{transform:scale(0.97)}
 button.sec{background:#1e2760;color:var(--blue);border:1px solid #2a3580}
-button.suc{background:linear-gradient(135deg,#00c853,#009624)}
+button.suc{background:linear-gradient(135deg,#00c853,#009824)}
 button.dan{background:linear-gradient(135deg,#ff1744,#d50000)}
 table{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px}
 th,td{border:1px solid #2a3580;padding:6px 4px;text-align:center}
@@ -32,9 +33,6 @@ th,td{border:1px solid #2a3580;padding:6px 4px;text-align:center}
 .tab-bar{position:fixed;bottom:0;left:0;right:0;display:flex;background:#111640;border-top:1px solid #222;z-index:100;padding-bottom:env(safe-area-inset-bottom,0)}
 .tab-bar button{flex:1;padding:9px 0;background:none;border:none;color:var(--mut);font-size:11px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}
 .tab-bar button.on{color:var(--pri)}
-.tag{display:inline-block;background:#1e2760;border-radius:6px;padding:2px 7px;margin:2px;font-size:11px}
-.drop{border:2px dashed #2a3580;border-radius:10px;padding:18px;text-align:center;color:var(--mut);font-size:12px;margin:6px 0;cursor:pointer}
-.drop.dragover{border-color:var(--pri);color:var(--pri)}
 .note{font-size:11px;color:var(--mut);margin:4px 0}
 </style>
 </head>
@@ -46,7 +44,7 @@ th,td{border:1px solid #2a3580;padding:6px 4px;text-align:center}
   <p>请输入访问密码以继续</p>
   <input id="pwd" type="password" placeholder="6位密码" maxlength="6" style="max-width:260px;text-align:center">
   <button onclick="checkPwd()" style="max-width:260px">解锁进入</button>
-  <p id="pwderr" class="dan" style="color:#ff1744;display:none;margin-top:10px">密码错误</p>
+  <p id="pwderr" style="color:#ff1744;display:none;margin-top:10px">密码错误</p>
   <p style="color:#555;font-size:11px;margin-top:24px">默认密码 123456</p>
 </div>
 
@@ -61,7 +59,6 @@ th,td{border:1px solid #2a3580;padding:6px 4px;text-align:center}
       <button class="sec" onclick="go('imp')">📥 批量导入</button>
       <button class="sec" onclick="go('chk')">🔍 开奖核对</button>
       <button class="sec" onclick="go('my')">📋 我的推荐</button>
-      <button class="sec" onclick="go('pool')">🗄️ 数据池</button>
       <button class="sec" onclick="go('set')">⚙️ 设置</button>
     </div>
   </div>
@@ -107,11 +104,9 @@ th,td{border:1px solid #2a3580;padding:6px 4px;text-align:center}
       <p id="iHint" class="note"></p>
       <textarea id="iText" rows="6" placeholder="粘贴开奖数据，每行一期"></textarea>
       <button onclick="impText()">📋 文本导入</button>
-      <div class="drop" id="fileDrop" onclick="document.getElementById('iFile').click()">📁 点击或拖拽文件到此处（txt/csv/tsv/xls/xlsx/json）</div>
-      <input type="file" id="iFile" accept=".txt,.csv,.tsv,.xls,.xlsx,.json" class="hidden" onchange="impFile()">
-      <div class="drop" id="ocrDrop" onclick="document.getElementById('ocrFile').click()">📸 点击或拖拽开奖截图（图片识别）</div>
-      <input type="file" id="ocrFile" accept="image/*" class="hidden" onchange="impImage()">
-      <p class="note">⚠️ 每种建议导入 50–60 期，过多会卡顿</p>
+      <button class="sec" onclick="document.getElementById('iFile').click()">📁 文件导入 (txt/csv/xlsx)</button>
+      <input type="file" id="iFile" accept=".txt,.csv,.tsv,.xls,.xlsx" class="hidden" onchange="impFile()">
+      <p class="note">⚠️ 每种建议导入 30–50 期，过多会卡顿</p>
     </div>
   </div>
 
@@ -144,28 +139,12 @@ th,td{border:1px solid #2a3580;padding:6px 4px;text-align:center}
       <p class="note">数据仅存本地浏览器，建议定期导出备份</p>
     </div>
   </div>
-
-  <div id="t-pool" class="hidden">
-    <div class="card">
-      <h3>🗄️ 数据池</h3>
-      <select id="pType" onchange="renderPool()">
-        <option value="dlt">大乐透</option>
-        <option value="ssq">双色球</option>
-        <option value="p3">排列三</option>
-        <option value="p5">排列五</option>
-      </select>
-      <p id="poolStat" class="note"></p>
-      <div id="poolList"></div>
-      <button class="dan" onclick="clearType()">🗑️ 清空该类型数据</button>
-    </div>
-  </div>
 </div>
 
 <div class="tab-bar">
   <button class="on" onclick="go('home')">🏠<br>首页</button>
   <button onclick="go('gen')">🎲<br>生成</button>
   <button onclick="go('my')">📋<br>我的</button>
-  <button onclick="go('pool')">🗄️<br>数据池</button>
   <button onclick="go('set')">⚙️<br>设置</button>
 </div>
 
@@ -177,7 +156,6 @@ const MAX = {
   p3:{kind:'digit',digits:3,range:10,name:'排列三'},
   p5:{kind:'digit',digits:5,range:10,name:'排列五'}
 };
-const TYPES = ['dlt','ssq','p3','p5'];
 
 // ==================== 数据 ====================
 let D = load() || {pwd:'123456', hist:{dlt:[],ssq:[],p3:[],p5:[]}, cur:{dlt:null,ssq:null,p3:null,p5:null}, lock:{dlt:false,ssq:false,p3:false,p5:false}, set:{tail:true,auto:true}};
@@ -195,14 +173,13 @@ function checkPwd(){
 }
 
 function go(t){
-  ['home','gen','my','imp','chk','set','pool'].forEach(x=>$('t-'+x).classList.add('hidden'));
+  ['home','gen','my','imp','chk','set'].forEach(x=>$('t-'+x).classList.add('hidden'));
   $('t-'+t).classList.remove('hidden');
   document.querySelectorAll('.tab-bar button').forEach(b=>b.classList.remove('on'));
-  const map={home:0,gen:1,my:2,set:3,pool:4,imp:1,chk:1};
+  const map={home:0,gen:1,my:2,set:3,imp:1,chk:1};
   document.querySelectorAll('.tab-bar button')[map[t]].classList.add('on');
   if(t==='home')renderStat();
   if(t==='my')renderMy();
-  if(t==='pool')renderPool();
 }
 
 function onImpType(){
@@ -213,7 +190,7 @@ function onImpType(){
 }
 function onChkType(){
   const t=$('cType').value, c=MAX[t];
-  if(c.kind==='digit'){
+  if(c=c.kind==='digit'){
     $('cFront').placeholder='开奖号码，如 123 或 12345';
     $('cFront').style.display='block';
     $('cBack').style.display='none';
@@ -256,7 +233,9 @@ function analyze(type){
 }
 
 function analyzeAndShow(){
-  const type=$('gType').value, cfg=MAX[type], a=analyze(type);
+  const type=$('gType').value, cfg=MAX[type];
+  if((D.hist[type]||[]).length===0){ $('analyzeOut').innerHTML='<span style="color:#ffd54f">⚠️ 暂无历史数据，将使用纯随机生成</span>'; return; }
+  const a=analyze(type);
   let h='';
   if(cfg.kind==='combo'){
     const hot=Object.entries(a.fc).filter(([k,v])=>v>0).sort((x,y)=>y[1]-x[1]).slice(0,8);
@@ -316,13 +295,18 @@ function pickBack(a,type){
 function pickDigit(a,type){
   const cfg=MAX[type], res=[];
   for(let p=0;p<cfg.digits;p++){
-    const stats=a.posStats[p]; let pool=[];
-    for(let d=0;d<cfg.range;d++){
-      let w=1;
-      const max=Math.max(1,...Object.values(stats).map(s=>s.f));
-      if(stats[d].f>0)w+=(stats[d].f/max)*2.5;
-      if(stats[d].miss>=10)w+=2; else if(stats[d].miss>=6)w+=1;
-      pool.push({n:d,w});
+    let pool=[];
+    if(a.kind==='digit' && a.posStats && a.posStats[p]){
+      const stats=a.posStats[p];
+      const maxF=Math.max(1,...Object.values(stats).map(s=>s.f));
+      for(let d=0;d<cfg.range;d++){
+        let w=1;
+        if(stats[d].f>0)w+=(stats[d].f/maxF)*2.5;
+        if(stats[d].miss>=10)w+=2; else if(stats[d].miss>=6)w+=1;
+        pool.push({n:d,w});
+      }
+    } else {
+      for(let d=0;d<cfg.range;d++)pool.push({n:d,w:1});
     }
     const tot=pool.reduce((s,x)=>s+x.w,0);
     let r=Math.random()*tot,sel=pool[0];
@@ -331,6 +315,7 @@ function pickDigit(a,type){
   }
   return res;
 }
+
 function validate(front,type){
   const sum=front.reduce((a,b)=>a+b,0);
   if(type==='dlt'&&(sum<70||sum>130))return false;
@@ -339,10 +324,12 @@ function validate(front,type){
   if(odd===0||odd===front.length)return false;
   const zones=type==='dlt'?[0,0,0,0]:[0,0,0];
   if(type==='dlt')front.forEach(n=>{zones[Math.min(3,Math.floor((n-1)/9))]++;});
-  else front.forEach(n=>{zones[Math.min(2,Math.floor((n-1)/11))]++;});
+  else front.forEach(n=>{});
+  if(type==='ssq')front.forEach(n=>{zones[Math.min(2,Math.floor((n-1)/11))]++;});
   if(zones.includes(0))return false;
   const span=Math.max(...front)-Math.min(...front);
   if(type==='dlt'&&(span<15||span>30))return false;
+  if(type==='ssq'&&(span<8||span>28))return false;
   return true;
 }
 function validateDigit(nums,type){
@@ -356,19 +343,18 @@ function validateDigit(nums,type){
   return true;
 }
 
-// ==================== 生成 ====================
 function gen(){
   const type=$('gType').value, cfg=MAX[type];
   $('genStatus').style.display='block';
-  $('genBtn').disabled=true;
   setTimeout(()=>{
     const a=analyze(type);
     let tries=0,result=[];
-    while(result.length<5&&tries<600){
+    while(result.length<5 && tries<400){
       tries++;
       let nums,back=[];
       if(cfg.kind==='combo'){
-        nums=pick(a,type,cfg.fn); back=pickBack(a,type);
+        nums=pick(a,type,cfg.fn);
+        back=pickBack(a,type);
         if(!validate(nums,type))continue;
       } else {
         nums=pickDigit(a,type);
@@ -380,21 +366,24 @@ function gen(){
     save();
     renderGen(result,type);
     $('genStatus').style.display='none';
-    $('genBtn').disabled=false;
     $('bConf').classList.remove('hidden');
     $('bReg').classList.remove('hidden');
-  },50);
+  },60);
 }
 
 function renderGen(list,type){
   const cfg=MAX[type];
   let h='<table><tr><th>注</th>';
-  h += cfg.kind==='combo' ? '<th>前区/红球</th><th>后区/蓝球</th>' : '<th>'+cfg.name+'号码</th>';
+  if(cfg.kind==='combo')h+='<th>前区/红球</th><th>后区/蓝球</th>';
+  else h+='<th>'+cfg.name+'号码</th>';
   h+='</tr>';
   list.forEach((r,i)=>{
-    h+=`<tr><td>${i+1}</td>`;
-    if(cfg.kind==='combo') h+=`<td class="red">${r.nums.join(' ')}</td><td class="blue">${r.back.join(' ')}</td>`;
-    else h+=`<td class="red">${r.nums.join(' ')}</td>`;
+    h+='<tr><td>'+(i+1)+'</td>';
+    if(cfg.kind==='combo'){
+      h+='<td class="red">'+r.nums.join(' ')+'</td><td class="blue">'+r.back.join(' ')+'</td>';
+    } else {
+      h+='<td class="red">'+r.nums.join(' ')+'</td>';
+    }
     h+='</tr>';
   });
   h+='</table>';
@@ -412,14 +401,14 @@ function unlock(){const t=$('gType').value;D.lock[t]=false;save();$('bUnl').clas
 
 function renderMy(){
   let h='';
-  TYPES.forEach(t=>{
+  ['dlt','ssq','p3','p5'].forEach(t=>{
     const cfg=MAX[t];
     if(D.cur[t]){
-      h+=`<h4>${cfg.name} ${D.lock[t]?'🔒':''}</h4>`;
-      h+=`<p class="note">生成时间：${D.cur[t].time}</p>`;
+      h+='<h4>'+cfg.name+(D.lock[t]?' 🔒':'')+'</h4>';
+      h+='<p class="note">生成时间：'+D.cur[t].time+'</p>';
       D.cur[t].list.forEach((r,i)=>{
-        const backStr=cfg.kind==='combo'?` <span class="blue">+ ${r.back.join(' ')}</span>`:'';
-        h+=`<p>${i+1}. <span class="red">${r.nums.join(' ')}</span>${backStr}</p>`;
+        const backStr=cfg.kind==='combo'?(' <span class="blue">+ '+r.back.join(' ')+'</span>'):'';
+        h+='<p>'+(i+1)+'. <span class="red">'+r.nums.join(' ')+'</span>'+backStr+'</p>';
       });
     }
   });
@@ -428,9 +417,13 @@ function renderMy(){
 }
 
 function shot(){
+  if(window.__noCanvas){alert('截图组件未加载，请手动截图');return;}
+  if(typeof html2canvas!=='function'){alert('截图组件未加载，请手动截图');return;}
   html2canvas($('myOut')).then(c=>{
     const a=document.createElement('a');
-    a.href=c.toDataURL('image/png'); a.download='推荐号码.png'; a.click();
+    a.href=c.toDataURL('image/png');
+    a.download='推荐号码.png';
+    a.click();
   }).catch(()=>alert('截图失败，请手动截图'));
 }
 
@@ -443,18 +436,26 @@ function impText(){
     const parts=line.trim().split(/\s+/).filter(x=>x!=='');
     if(cfg.kind==='combo'){
       const nums=parts.filter(x=>/^\d+$/.test(x)).map(Number);
-      if(nums.length>=cfg.fn){ D.hist[type].push({issue:'',nums:nums.slice(0,cfg.fn),back:nums.slice(cfg.fn,cfg.fn+cfg.bn)}); cnt++; }
+      if(nums.length>=cfg.fn){
+        D.hist[type].push({issue:'',nums:nums.slice(0,cfg.fn),back:nums.slice(cfg.fn,cfg.fn+cfg.bn)});
+        cnt++;
+      }
     } else {
-      let digits=''; parts.forEach(p=>{digits+=p.replace(/\D/g,'');});
-      if(digits.length>=cfg.digits){ D.hist[type].push({issue:'',nums:digits.slice(0,cfg.digits).split('').map(Number)}); cnt++; }
+      let digits='';
+      parts.forEach(p=>{digits+=p.replace(/\D/g,'');});
+      if(digits.length>=cfg.digits){
+        D.hist[type].push({issue:'',nums:digits.slice(0,cfg.digits).split('').map(Number)});
+        cnt++;
+      }
     }
   });
-  save(); alert(`导入成功 ${cnt} 期`); renderStat();
+  trimHist(type);
+  save(); alert('导入成功 '+cnt+' 期'); renderStat();
 }
-
 function impFile(){
   const type=$('iType').value, cfg=MAX[type];
-  const f=$('iFile').files[0]; if(!f)return;
+  const f=$('iFile').files[0];
+  if(!f){return;}
   const ext=f.name.split('.').pop().toLowerCase();
   const reader=new FileReader();
   if(['txt','csv','tsv'].includes(ext)){
@@ -462,68 +463,32 @@ function impFile(){
     reader.readAsText(f); return;
   }
   if(['xls','xlsx'].includes(ext)){
+    if(window.__noXlsx){alert('Excel 组件未加载，请用 txt/csv 格式导入');return;}
     reader.onload=e=>{
       try{
         const wb=XLSX.read(e.target.result,{type:'array'});
-        const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1});
+        const ws=wb.Sheets[wb.SheetNames[0]];
+        const rows=XLSX.utils.sheet_to_json(ws,{header:1});
         let cnt=0;
         rows.forEach(row=>{
           if(cfg.kind==='combo'){
             const nums=row.filter(c=>c!==null&&c!=='').map(c=>parseInt(c)).filter(n=>!isNaN(n));
-            if(nums.length>=cfg.fn){ D.hist[type].push({issue:'',nums:nums.slice(0,cfg.fn),back:nums.slice(cfg.fn,cfg.fn+cfg.bn)}); cnt++; }
+            if(nums.length>=cfg.fn){D.hist[type].push({issue:'',nums:nums.slice(0,cfg.fn),back:nums.slice(cfg.fn,cfg.fn+cfg.bn)});cnt++;}
           } else {
-            let digits=''; row.forEach(c=>{if(c!==null&&c!=='')digits+=String(c).replace(/\D/g,'');});
-            if(digits.length>=cfg.digits){ D.hist[type].push({issue:'',nums:digits.slice(0,cfg.digits).split('').map(Number)}); cnt++; }
+            let digits='';
+            row.forEach(c=>{if(c!==null&&c!=='')digits+=String(c).replace(/\D/g,'');});
+            if(digits.length>=cfg.digits){D.hist[type].push({issue:'',nums:digits.slice(0,cfg.digits).split('').map(Number)});cnt++;}
           }
         });
-        save(); alert(`导入 ${cnt} 期`);
-      }catch(err){ alert('Excel 解析失败，请检查格式'); }
+        trimHist(type); save(); alert('导入 '+cnt+' 期'); renderStat();
+      }catch(err){alert('Excel 解析失败，请检查格式');}
     };
     reader.readAsArrayBuffer(f); return;
   }
-  if(ext==='json'){
-    reader.onload=e=>{
-      try{
-        const data=JSON.parse(e.target.result);
-        const arr=Array.isArray(data)?data:(data.hist&&data.hist[type]?data.hist[type]:[]);
-        let cnt=0;
-        arr.forEach(rec=>{
-          if(rec.nums&&rec.nums.length>=cfg.fn){ D.hist[type].push({issue:rec.issue||'',nums:rec.nums.slice(0,cfg.fn),back:(rec.back||[]).slice(0,cfg.bn)}); cnt++; }
-        });
-        save(); alert(`导入 ${cnt} 期`);
-      }catch(err){ alert('JSON 解析失败'); }
-    };
-    reader.readAsText(f); return;
-  }
   alert('不支持的文件类型：'+ext);
 }
-
-function impImage(){
-  const type=$('iType').value, cfg=MAX[type];
-  const f=$('ocrFile').files[0]; if(!f)return;
-  if(!confirm('图片识别需联网加载引擎（首次较慢），是否继续？'))return;
-  const s=document.createElement('script');
-  s.src='https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js';
-  s.onload=()=>{
-    Tesseract.recognize(f,'chi_sim+eng',{logger:()=>{}}).then(({data})=>{
-      const txt=data.text;
-      const lines=txt.split('\n').filter(l=>/\d/.test(l));
-      let cnt=0;
-      lines.forEach(line=>{
-        const parts=line.trim().split(/\s+/).filter(x=>/^\d+$/.test(x));
-        if(cfg.kind==='combo'){
-          if(parts.length>=cfg.fn){ D.hist[type].push({issue:'',nums:parts.slice(0,cfg.fn).map(Number),back:parts.slice(cfg.fn,cfg.fn+cfg.bn).map(Number)}); cnt++; }
-        } else {
-          let digits=line.replace(/\D/g,'');
-          if(digits.length>=cfg.digits){ D.hist[type].push({issue:'',nums:digits.slice(0,cfg.digits).split('').map(Number)}); cnt++; }
-        }
-      });
-      if(cnt>0){ save(); alert(`图片识别导入 ${cnt} 期，请核对后使用`); renderStat(); }
-      else alert('未识别到号码，请换清晰截图重试');
-    }).catch(()=>alert('识别失败，请手动输入'));
-  };
-  s.onerror=()=>alert('识别引擎加载失败，请检查网络');
-  document.head.appendChild(s);
+function trimHist(type){
+  if(D.hist[type].length>50) D.hist[type]=D.hist[type].slice(-50);
 }
 
 // ==================== 核对 ====================
@@ -546,95 +511,69 @@ function chk(){
       const hb=(r.back||[]).filter(n=>openBack.includes(n)).length;
       let lvl='未中奖';
       if(type==='dlt'){
-        if(hf===5&&hb===2)lvl='一等奖'; else if(hf===5&&hb===1)lvl='二等奖'; else if(hf===5)lvl='三等奖';
-        else if(hf===4&&hb===2)lvl='四等奖'; else if(hf===4&&hb===1||hf===3&&hb===2)lvl='五等奖';
+        if(hf===5&&hb===2)lvl='一等奖';
+        else if(hf===5&&hb===1)lvl='二等奖';
+        else if(hf===5)lvl='三等奖';
+        else if(hf===4&&hb===2)lvl='四等奖';
+        else if(hf===4&&hb===1||hf===3&&hb===2)lvl='五等奖';
         else if(hf===4||hf===3&&hb===1||hf===2&&hb===2)lvl='六等奖';
-        else if(hf===3||hf===1&&hb===2||hb===2)lvl='八等奖'; else if(hf===2&&hb===1||hb===1)lvl='九等奖';
+        else if(hf===3||hf===1&&hb===2||hb===2)lvl='八等奖';
+        else if(hf===2&&hb===1||hb===1)lvl='九等奖';
       } else {
-        if(hf===6&&hb===1)lvl='一等奖'; else if(hf===6)lvl='二等奖'; else if(hf===5&&hb===1)lvl='三等奖';
-        else if(hf===5||hf===4&&hb===1)lvl='四等奖'; else if(hf===4||hf===3&&hb===1)lvl='五等奖';
+        if(hf===6&&hb===1)lvl='一等奖';
+        else if(hf===6)lvl='二等奖';
+        else if(hf===5&&hb===1)lvl='三等奖';
+        else if(hf===5||hf===4&&hb===1)lvl='四等奖';
+        else if(hf===4||hf===3&&hb===1)lvl='五等奖';
         else if(hf===2&&hb===1||hf===1&&hb===1||hb===1)lvl='六等奖';
       }
-      h+=`<tr><td>${i+1}</td><td class="red">${hf}</td><td class="blue">${hb}</td><td>${lvl}</td></tr>`;
+      h+='<tr><td>'+(i+1)+'</td><td class="red">'+hf+'</td><td class="blue">'+hb+'</td><td>'+lvl+'</td></tr>';
     } else {
-      let hit=0; for(let p=0;p<cfg.digits;p++) if(r.nums[p]===openNums[p])hit++;
+      let hit=0;
+      for(let p=0;p<cfg.digits;p++){ if(r.nums[p]===openNums[p])hit++; }
       let lvl=hit===cfg.digits?'直选中奖':'未中奖';
-      if(hit<cfg.digits&&type==='p3'){
-        if(JSON.stringify([...r.nums].sort())===JSON.stringify([...openNums].sort()))lvl='组选中奖';
+      if(hit<cfg.digits && type==='p3'){
+        const same=JSON.stringify([...r.nums].sort())===JSON.stringify([...openNums].sort());
+        if(same)lvl='组选中奖';
       }
-      h+=`<tr><td>${i+1}</td><td>${hit}/${cfg.digits}</td><td>${lvl}</td></tr>`;
+      h+='<tr><td>'+(i+1)+'</td><td>'+hit+'/'+cfg.digits+'</td><td>'+lvl+'</td></tr>';
     }
   });
   h+='</table>';
   $('chkOut').innerHTML=h;
   const rec=cfg.kind==='combo'?{issue,nums:openNums,back:openBack}:{issue,nums:openNums};
-  if(D.set.auto){ D.hist[type].push(rec); save(); alert('已自动加入历史记录'); renderStat(); }
-  else if(confirm('是否加入历史记录？')){ D.hist[type].push(rec); save(); renderStat(); }
+  if(D.set.auto){D.hist[type].push(rec);trimHist(type);save();alert('已自动加入历史记录');renderStat();}
+  else if(confirm('是否加入历史记录？')){D.hist[type].push(rec);trimHist(type);save();renderStat();}
 }
 
-// ==================== 统计/数据 ====================
+// ==================== 统计 ====================
 function renderStat(){
-  const c=t=>`${MAX[t].name}：<b>${D.hist[t].length}</b>期`;
-  $('stat').innerHTML=`${c('dlt')} | ${c('ssq')}<br>${c('p3')} | ${c('p5')}<br><span class="note">每种建议各导入 50–60 期</span>`;
+  const d=D.hist.dlt.length,s=D.hist.ssq.length,p3=D.hist.p3.length,p5=D.hist.p5.length;
+  $('stat').innerHTML='大乐透：<b>'+d+'</b>期 | 双色球：<b>'+s+'</b>期<br>排列三：<b>'+p3+'</b>期 | 排列五：<b>'+p5+'</b>期<br><span style="color:var(--mut)">每种建议各导入 30–50 期</span>';
 }
-// ==================== 数据池 ====================
-function renderPool(){
-  const t=$('pType').value, arr=D.hist[t]||[], cfg=MAX[t];
-  let h='';
-  if(arr.length===0){
-    h='<p class="note">暂无数据，请先去「批量导入」</p>';
-  } else {
-    if(arr.length>60) h+=`<p class="note" style="color:#ff1744">⚠️ 当前 ${arr.length} 期，超过60期易卡顿，建议保留 30–40 期</p>`;
-    h+='<table><tr><th>#</th><th>期号</th><th>号码</th><th></th></tr>';
-    arr.slice().reverse().forEach((r,i)=>{
-      const idx=arr.length-1-i;
-      const nums=cfg.kind==='combo'
-        ? r.nums.join(' ')+(r.back&&r.back.length?(' + '+r.back.join(' ')):'')
-        : r.nums.join(' ');
-      h+=`<tr><td>${idx+1}</td><td>${r.issue||'-'}</td><td class="red" style="text-align:left">${nums}</td><td><button class="dan" style="padding:4px 8px;font-size:11px;margin:0" onclick="delRec('${t}',${idx})">删</button></td></tr>`;
-    });
-    h+='</table>';
-  }
-  $('poolList').innerHTML=h;
-  $('poolStat').innerHTML=`当前类型：${cfg.name} ｜ 共 <b style="color:var(--pri)">${arr.length}</b> 期`;
-}
-function delRec(t,idx){
-  if(confirm('确定删除这条记录？')){ D.hist[t].splice(idx,1); save(); renderPool(); renderStat(); }
-}
-function clearType(){
-  const t=$('pType').value;
-  if(confirm(`确定清空「${MAX[t].name}」全部 ${D.hist[t].length} 期数据？`)){ D.hist[t]=[]; save(); renderPool(); renderStat(); }
-}
+
+// ==================== 数据 ====================
 function exp(){
   const a=document.createElement('a');
   a.href='data:text/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(D));
-  a.download='选号助手备份.json'; a.click();
+  a.download='选号助手备份.json';
+  a.click();
 }
 function impData(e){
   const f=e.target.files[0]; if(!f)return;
   const r=new FileReader();
-  r.onload=ev=>{ try{ D=JSON.parse(ev.target.result); save(); alert('恢复成功'); renderStat(); renderMy(); }catch(x){ alert('文件错误'); } };
+  r.onload=ev=>{try{D=JSON.parse(ev.target.result);save();alert('恢复成功');renderStat();renderMy();}catch(x){alert('文件错误');}};
   r.readAsText(f);
 }
-function clr(){ if(confirm('确定清除全部数据？')){ localStorage.removeItem('lottoApp'); location.reload(); } }
+function clr(){if(confirm('确定清除全部数据？')){localStorage.removeItem('lottoApp');location.reload();}}
 
-// ==================== 初始化 ====================
 function initUI(){
   $('sTail').checked=D.set.tail;
   $('sAuto').checked=D.set.auto;
   $('sTail').onchange=()=>{D.set.tail=$('sTail').checked;save();};
   $('sAuto').onchange=()=>{D.set.auto=$('sAuto').checked;save();};
-  onImpType(); onChkType(); renderStat(); renderMy();
-  // 拖拽
-  ['fileDrop','ocrDrop'].forEach(id=>{
-    const el=$(id);
-    el.addEventListener('dragover',e=>{e.preventDefault();el.classList.add('dragover');});
-    el.addEventListener('dragleave',()=>el.classList.remove('dragover'));
-    el.addEventListener('drop',e=>{e.preventDefault();el.classList.remove('dragover');});
-  });
+  onImpType(); onChkType(); renderStat();
 }
-// 密码正确后才调用 initUI，此处仅占位
-if(D.pwd==='123456'){}
 </script>
 </body>
 </html>
