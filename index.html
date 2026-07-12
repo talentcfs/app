@@ -2,297 +2,265 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>🎯 智能选号助手</title>
-<!-- 外部库按需加载，失败不影响核心选号 -->
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" onerror="window.__noXlsx=true"></script>
-<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" onerror="window.__noCanvas=true"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>智能选号助手</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <style>
-:root{--bg:#0a0e27;--card:#141b4a;--pri:#ff6b35;--dan:#ff1744;--suc:#00c853;--txt:#e0e0e0;--mut:#888;--blue:#7c8bff}
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-serif;background:var(--bg);color:var(--txt);font-size:14px;padding-bottom:75px;overflow-x:hidden}
-.container{max-width:480px;margin:0 auto;padding:12px}
-h1{text-align:center;font-size:20px;color:var(--pri);margin:14px 0 4px}
-h3{color:var(--pri);font-size:15px;margin-bottom:10px}
-.card{background:var(--card);border-radius:12px;padding:14px;margin-bottom:12px;border:1px solid #1e2760}
-input,select,textarea,button{width:100%;padding:11px 12px;border-radius:8px;border:1px solid #2a3580;background:#0d1234;color:#fff;font-size:14px;margin:5px 0;font-family:inherit}
-button{background:linear-gradient(135deg,#ff6b35,#ff3c00);border:none;font-weight:600;cursor:pointer}
-button:active{transform:scale(0.97)}
-button.sec{background:#1e2760;color:var(--blue);border:1px solid #2a3580}
-button.suc{background:linear-gradient(135deg,#00c853,#009824)}
-button.dan{background:linear-gradient(135deg,#ff1744,#d50000)}
+:root{--bg:#0f172a;--card:#1e293b;--pri:#3b82f6;--dan:#ef4444;--suc:#22c55e;--txt:#f1f5f9;--mut:#94a3b8}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;background:var(--bg);color:var(--txt);padding-bottom:70px}
+.container{max-width:480px;margin:0 auto;padding:14px}
+h1,h2,h3{text-align:center;margin:10px 0}
+.card{background:var(--card);border-radius:12px;padding:12px;margin-bottom:12px}
+input,select,button,textarea{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:1px solid #475569;background:#0f172a;color:#fff;font-size:14px}
+button{background:var(--pri);cursor:pointer;border:none;font-weight:600}
+button.dan{background:var(--dan)}button.suc{background:var(--suc)}
 table{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px}
-th,td{border:1px solid #2a3580;padding:6px 4px;text-align:center}
-.red{color:#ff5c5c}.blue{color:#7c8bff}.hot{color:#ffd54f}.cold{color:#4dd0e1}
+th,td{border:1px solid #475569;padding:5px;text-align:center}
+.red{color:#f87171}.blue{color:#60a5fa}.hot{color:#fbbf24}.miss{color:#34d399}
 .hidden{display:none}
-.tab-bar{position:fixed;bottom:0;left:0;right:0;display:flex;background:#111640;border-top:1px solid #222;z-index:100;padding-bottom:env(safe-area-inset-bottom,0)}
-.tab-bar button{flex:1;padding:9px 0;background:none;border:none;color:var(--mut);font-size:11px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}
-.tab-bar button.on{color:var(--pri)}
-.note{font-size:11px;color:var(--mut);margin:4px 0}
+.tag{display:inline-block;background:#334155;border-radius:6px;padding:2px 8px;margin:2px;font-size:11px}
 </style>
 </head>
 <body>
 
 <div class="container" id="main">
-  <h1>🎯 智能选号助手</h1>
+<h1>🎯 智能选号助手</h1>
 
-  <div id="t-home">
-    <div class="card"><h3>📊 数据概览</h3><p id="stat" style="font-size:13px;line-height:1.7"></p></div>
-    <div class="card">
-      <h3>🚀 快速入口</h3>
-      <button onclick="go('gen')">🎲 生成推荐</button>
-      <button class="sec" onclick="go('imp')">📥 批量导入</button>
-      <button class="sec" onclick="go('chk')">🔍 开奖核对</button>
-      <button class="sec" onclick="go('my')">📋 我的推荐</button>
-      <button class="sec" onclick="go('set')">⚙️ 设置</button>
-    </div>
-  </div>
+<!-- 首页 -->
+<div id="t-home">
+<div class="card"><h3>📊 数据概览</h3><p id="stat" style="font-size:13px"></p></div>
+<div class="card">
+<h3>🚀 快速入口</h3>
+<button onclick="go('gen')">生成推荐</button>
+<button onclick="go('imp')">批量导入</button>
+<button onclick="go('chk')">开奖核对</button>
+<button onclick="go('my')">我的推荐</button>
+<button onclick="go('set')">设置</button>
+</div>
+</div>
 
-  <div id="t-gen" class="hidden">
-    <div class="card">
-      <h3>🎲 生成推荐</h3>
-      <select id="gType">
-        <option value="dlt">大乐透</option>
-        <option value="ssq">双色球</option>
-        <option value="p3">排列三</option>
-        <option value="p5">排列五</option>
-      </select>
-      <button onclick="analyzeAndShow()">🔍 分析数据</button>
-      <div id="analyzeOut" class="note"></div>
-      <button onclick="gen()" id="genBtn">🎰 生成 5 注</button>
-      <div id="genStatus" class="note" style="color:var(--pri);display:none">⏳ 正在分析数据…</div>
-      <div id="genOut"></div>
-      <button class="suc hidden" id="bConf" onclick="conf()">✅ 确认保存这 5 注</button>
-      <button class="sec hidden" id="bReg" onclick="gen()">🔄 重新生成</button>
-    </div>
-  </div>
+<!-- 生成 -->
+<div id="t-gen" class="hidden">
+<div class="card">
+<h3>🎲 生成推荐</h3>
+<select id="gType">
+  <option value="dlt">大乐透</option>
+  <option value="ssq">双色球</option>
+  <option value="p3">排列三</option>
+  <option value="p5">排列五</option>
+</select>
+<button onclick="gen()">🎰 生成 5 注</button>
+<div id="genOut"></div>
+<button class="suc hidden" id="bConf" onclick="conf()">✅ 确认保存这 5 注</button>
+<button class="hidden" id="bReg" onclick="gen()">🔄 重新生成</button>
+</div>
+</div>
 
-  <div id="t-my" class="hidden">
-    <div class="card">
-      <h3>📋 我的推荐</h3>
-      <div id="myOut"></div>
-      <button onclick="lock()">🔒 锁定当前</button>
-      <button class="sec hidden" id="bUnl" onclick="unlock()">🔓 解锁</button>
-      <button class="suc" onclick="shot()">📸 截图保存</button>
-    </div>
-  </div>
+<!-- 我的推荐 -->
+<div id="t-my" class="hidden">
+<div class="card">
+<h3>📋 我的推荐</h3>
+<div id="myOut"></div>
+<div id="lockBtns">
+<button onclick="lock()">🔒 锁定当前</button>
+<button class="hidden" id="bUnl" onclick="unlock()">🔓 解锁</button>
+</div>
+<button onclick="shot()">📸 截图保存</button>
+</div>
+</div>
 
-  <div id="t-imp" class="hidden">
-    <div class="card">
-      <h3>📥 批量导入</h3>
-      <select id="iType" onchange="onImpType()">
-        <option value="dlt">大乐透</option>
-        <option value="ssq">双色球</option>
-        <option value="p3">排列三</option>
-        <option value="p5">排列五</option>
-      </select>
-      <p id="iHint" class="note"></p>
-      <textarea id="iText" rows="6" placeholder="粘贴开奖数据，每行一期"></textarea>
-      <button onclick="impText()">📋 文本导入</button>
-      <button class="sec" onclick="document.getElementById('iFile').click()">📁 文件导入 (txt/csv/xlsx)</button>
-      <input type="file" id="iFile" accept=".txt,.csv,.tsv,.xls,.xlsx" class="hidden" onchange="impFile()">
-      <p class="note">⚠️ 每种建议导入 30–50 期，过多会卡顿</p>
-    </div>
-  </div>
+<!-- 导入 -->
+<div id="t-imp" class="hidden">
+<div class="card">
+<h3>📥 批量导入 50 期</h3>
+<select id="iType">
+  <option value="dlt">大乐透</option>
+  <option value="ssq">双色球</option>
+  <option value="p3">排列三</option>
+  <option value="p5">排列五</option>
+</select>
+<p style="font-size:12px;color:var(--mut)">
+大乐透/双色球：每行一期，例<br>24001 01 02 03 04 05 + 06 07<br>
+排列三/五：每行一期，例<br>24001 123 &nbsp;或&nbsp; 24001 1 2 3
+</p>
+<textarea id="iText" rows="6" placeholder="粘贴开奖数据..."></textarea>
+<button onclick="impText()">📋 文本导入</button>
+<input type="file" id="iFile" accept=".txt,.csv,.xlsx"><button onclick="impFile()">📄 文件导入</button>
+</div>
+</div>
 
-  <div id="t-chk" class="hidden">
-    <div class="card">
-      <h3>🔍 开奖核对</h3>
-      <select id="cType" onchange="onChkType()">
-        <option value="dlt">大乐透</option>
-        <option value="ssq">双色球</option>
-        <option value="p3">排列三</option>
-        <option value="p5">排列五</option>
-      </select>
-      <input id="cIssue" placeholder="期号，如 24050">
-      <input id="cFront" placeholder="前区/红球，空格分隔">
-      <input id="cBack" placeholder="后区/蓝球，空格分隔" class="hidden">
-      <button onclick="chk()">核对</button>
-      <div id="chkOut"></div>
-    </div>
-  </div>
+<!-- 核对 -->
+<div id="t-chk" class="hidden">
+<div class="card">
+<h3>🔍 开奖核对</h3>
+<select id="cType" onchange="updChk()">
+  <option value="dlt">大乐透</option>
+  <option value="ssq">双色球</option>
+  <option value="p3">排列三</option>
+  <option value="p5">排列五</option>
+</select>
+<input id="cIssue" placeholder="期号，如 24050">
+<input id="cFront" placeholder="前区/红球，空格分隔">
+<input id="cBack" placeholder="后区/蓝球，空格分隔">
+<button onclick="chk()">核对</button>
+<div id="chkOut"></div>
+</div>
+</div>
 
-  <div id="t-set" class="hidden">
-    <div class="card">
-      <h3>⚙️ 设置</h3>
-      <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="sTail" checked style="width:auto"> 启用尾数分析（大乐透/双色球）</label>
-      <label style="display:flex;align-items:center;gap:8px;margin-top:8px"><input type="checkbox" id="sAuto" checked style="width:auto"> 开奖后自动归档</label>
-      <button class="sec" onclick="exp()">📤 导出数据</button>
-      <button class="sec" onclick="document.getElementById('iData').click()">📥 导入数据</button>
-      <input type="file" id="iData" accept=".json" class="hidden" onchange="impData(event)">
-      <button class="dan" onclick="clr()">🗑️ 清除全部</button>
-      <p class="note">数据仅存本地浏览器，建议定期导出备份</p>
-    </div>
-  </div>
+<!-- 设置 -->
+<div id="t-set" class="hidden">
+<div class="card">
+<h3>⚙️ 设置</h3>
+<label><input type="checkbox" id="sTail" checked> 启用尾数分析</label><br><br>
+<label><input type="checkbox" id="sAuto" checked> 开奖后自动归档</label><br><br>
+<button onclick="exp()">📤 导出数据</button>
+<button onclick="impData()">📥 导入数据</button>
+<input type="file" id="iData" accept=".json" class="hidden">
+<button class="dan" onclick="clr()">🗑️ 清除全部</button>
+<p style="font-size:11px;color:var(--mut)">数据仅存本地浏览器，建议定期导出备份</p>
+</div>
+</div>
+
 </div>
 
 <div class="tab-bar">
-  <button class="on" onclick="go('home')">🏠<br>首页</button>
-  <button onclick="go('gen')">🎲<br>生成</button>
-  <button onclick="go('my')">📋<br>我的</button>
-  <button onclick="go('set')">⚙️<br>设置</button>
+<button class="on" data-t="home" onclick="go('home')">🏠 首页</button>
+<button data-t="gen" onclick="go('gen')">🎲 生成</button>
+<button data-t="my" onclick="go('my')">📋 我的</button>
+<button data-t="set" onclick="go('set')">⚙️ 设置</button>
 </div>
 
 <script>
-// ==================== 配置 ====================
-const MAX = {
-  dlt:{kind:'combo',f:35,b:12,fn:5,bn:2,name:'大乐透'},
-  ssq:{kind:'combo',f:33,b:16,fn:6,bn:1,name:'双色球'},
-  p3:{kind:'digit',digits:3,range:10,name:'排列三'},
-  p5:{kind:'digit',digits:5,range:10,name:'排列五'}
+const MAX={
+  dlt:{kind:'combo',f:35,b:12,fn:5,bn:2},
+  ssq:{kind:'combo',f:33,b:16,fn:6,bn:1},
+  p3:{kind:'digit',digits:3,max:9},
+  p5:{kind:'digit',digits:5,max:9}
 };
 
-// ==================== 数据 ====================
-let D = load() || {hist:{dlt:[],ssq:[],p3:[],p5:[]}, cur:{dlt:null,ssq:null,p3:null,p5:null}, lock:{dlt:false,ssq:false,p3:false,p5:false}, set:{tail:true,auto:true}};
-const $ = id => document.getElementById(id);
+let D=load();
+if(!D)D={};
+D.hist=Object.assign({dlt:[],ssq:[],p3:[],p5:[]},D.hist||{});
+D.cur=Object.assign({dlt:null,ssq:null,p3:null,p5:null},D.cur||{});
+D.lock=Object.assign({dlt:false,ssq:false,p3:false,p5:false},D.lock||{});
+if(!D.set)D.set={tail:true,auto:true};
 
-function load(){ try{ return JSON.parse(localStorage.getItem('lottoApp')); }catch(e){ return null; } }
-function save(){ localStorage.setItem('lottoApp', JSON.stringify(D)); }
+const $=id=>document.getElementById(id);
+const NAMES={dlt:'大乐透',ssq:'双色球',p3:'排列三',p5:'排列五'};
+
+function load(){try{return JSON.parse(localStorage.getItem('lottoApp'))}catch(e){return null}}
+function save(){localStorage.setItem('lottoApp',JSON.stringify(D))}
 
 function go(t){
   ['home','gen','my','imp','chk','set'].forEach(x=>$('t-'+x).classList.add('hidden'));
   $('t-'+t).classList.remove('hidden');
   document.querySelectorAll('.tab-bar button').forEach(b=>b.classList.remove('on'));
-  const map={home:0,gen:1,my:2,set:3,imp:1,chk:1};
-  document.querySelectorAll('.tab-bar button')[map[t]].classList.add('on');
+  document.querySelector(`.tab-bar button[data-t="${t==='imp'?'gen':t==='chk'?'gen':t}"]`)?.classList.add('on');
   if(t==='home')renderStat();
   if(t==='my')renderMy();
 }
 
-function onImpType(){
-  const t=$('iType').value, c=MAX[t];
-  $('iHint').innerHTML = c.kind==='digit'
-    ? '格式：每行一期<br>例：24001 123<br>24002 45678'
-    : '格式：每行一期<br>例：24001 01 02 03 04 05 + 06 07';
-}
-function onChkType(){
-  const t=$('cType').value, c=MAX[t];
-  if(c=c.kind==='digit'){
-    $('cFront').placeholder='开奖号码，如 123 或 12345';
-    $('cFront').style.display='block';
-    $('cBack').style.display='none';
-  } else {
-    $('cFront').placeholder='前区/红球，空格分隔';
-    $('cBack').placeholder='后区/蓝球，空格分隔';
-    $('cFront').style.display='block';
-    $('cBack').style.display='block';
-  }
-}
-
-// ==================== 分析引擎 ====================
+// ===== 分析引擎 =====
 function analyze(type){
   const cfg=MAX[type];
-  const recs=(D.hist[type]||[]).slice(-50);
-  if(cfg.kind==='combo'){
-    const F=cfg.f,B=cfg.b;
-    const fc={},bc={},fm={},bm={};
-    for(let i=1;i<=F;i++){fc[i]=0;fm[i]=recs.length;}
-    for(let i=1;i<=B;i++){bc[i]=0;bm[i]=recs.length;}
-    recs.forEach((r,idx)=>{
-      (r.nums||[]).forEach(n=>{fc[n]++;if(fm[n]===recs.length)fm[n]=idx;});
-      (r.back||[]).forEach(n=>{bc[n]++;if(bm[n]===recs.length)bm[n]=idx;});
-    });
-    const tailF={},tailB={};
-    for(let i=1;i<=F;i++){const t=i%10;tailF[t]=(tailF[t]||0)+fc[i];}
-    for(let i=1;i<=B;i++){const t=i%10;tailB[t]=(tailB[t]||0)+bc[i];}
-    return {kind:'combo',recs,fc,bc,fm,bm,tailF,tailB,F,B};
-  } else {
-    const DIG=cfg.digits,R=cfg.range;
-    const ps=[];
-    for(let p=0;p<DIG;p++){ const m={}; for(let d=0;d<R;d++)m[d]={f:0,miss:recs.length}; ps.push(m); }
-    recs.forEach((r,idx)=>{
-      (r.nums||[]).forEach((num,p)=>{
-        if(ps[p]&&ps[p][num]!==undefined){ ps[p][num].f++; if(ps[p][num].miss===recs.length)ps[p][num].miss=idx; }
-      });
-    });
-    return {kind:'digit',recs,posStats:ps,DIG,R};
-  }
-}
-
-function analyzeAndShow(){
-  const type=$('gType').value, cfg=MAX[type];
-  if((D.hist[type]||[]).length===0){ $('analyzeOut').innerHTML='<span style="color:#ffd54f">⚠️ 暂无历史数据，将使用纯随机生成</span>'; return; }
-  const a=analyze(type);
-  let h='';
-  if(cfg.kind==='combo'){
-    const hot=Object.entries(a.fc).filter(([k,v])=>v>0).sort((x,y)=>y[1]-x[1]).slice(0,8);
-    const cold=Object.entries(a.fm).filter(([k,v])=>v>=10).sort((x,y)=>y[1]-x[1]).slice(0,6);
-    const bhot=Object.entries(a.bc).filter(([k,v])=>v>0).sort((x,y)=>y[1]-x[1]).slice(0,5);
-    h+=`🔴 前区热号：<span class="hot">${hot.map(([k,v])=>k+'('+v+')').join(' ')}</span><br>`;
-    h+=`🔵 后区热号：<span class="hot">${bhot.map(([k,v])=>k+'('+v+')').join(' ')}</span><br>`;
-    h+=`❄️ 遗漏≥10期：<span class="cold">${cold.map(([k,v])=>k+'('+v+')').join(' ')}</span>`;
-  } else {
-    for(let p=0;p<cfg.digits;p++){
-      const st=a.posStats[p];
-      const sorted=Object.entries(st).sort((x,y)=>y[1].f-x[1].f).slice(0,5);
-      h+=`第${p+1}位热号：<span class="hot">${sorted.map(([k,v])=>k+'('+v.f+')').join(' ')}</span><br>`;
+  if(cfg.kind==='digit'){
+    const recs=D.hist[type].slice(-50);
+    const posF=[];
+    for(let i=0;i<cfg.digits;i++){
+      const m={};
+      for(let d=0;d<=cfg.max;d++)m[d]=0;
+      posF.push(m);
     }
+    recs.forEach(r=>{
+      if(r.nums)r.nums.forEach((n,idx)=>{ if(posF[idx]&&n>=0&&n<=cfg.max)posF[idx][n]=(posF[idx][n]||0)+1; });
+    });
+    return {recs,cfg,kind:'digit',posF};
   }
-  $('analyzeOut').innerHTML=h;
+  // combo
+  const recs=D.hist[type].slice(-50);
+  const F=cfg.f,B=cfg.b;
+  const fc={},bc={},fm={},bm={};
+  for(let i=1;i<=F;i++){fc[i]=0;fm[i]=recs.length}
+  for(let i=1;i<=B;i++){bc[i]=0;bm[i]=recs.length}
+  recs.forEach((r,idx)=>{
+    r.front.forEach(n=>{fc[n]++;if(fm[n]===recs.length)fm[n]=idx});
+    r.back.forEach(n=>{bc[n]++;if(bm[n]===recs.length)bm[n]=idx});
+  });
+  const tailF={},tailB={};
+  for(let i=1;i<=F;i++){const t=i%10;tailF[t]=(tailF[t]||0)+fc[i]}
+  for(let i=1;i<=B;i++){const t=i%10;tailB[t]=(tailB[t]||0)+bc[i]}
+  return {recs,fc,bc,fm,bm,tailF,tailB,F,B,kind:'combo'};
 }
 
-// ==================== 选号 ====================
-function pick(a,type,count){
-  const F=MAX[type].f; let pool=[];
+// ===== 加权随机 =====
+function weightedPick(pool){
+  const tot=pool.reduce((s,p)=>s+p.w,0);
+  let r=Math.random()*tot;
+  for(const p of pool){r-=p.w;if(r<=0)return p.n;}
+  return pool[pool.length-1].n;
+}
+
+// combo 前区
+function pick(a,type,count,exclude){
+  const F=MAX[type].f;
+  let pool=[];
+  const maxF=Math.max(...Object.values(a.fc))||1;
   for(let i=1;i<=F;i++){
+    if(exclude&&exclude.has(i))continue;
     let w=1;
-    if(a.fc[i]>0)w+=(a.fc[i]/Math.max(1,...Object.values(a.fc)))*2.5;
-    if(a.fm[i]>=15)w+=3; else if(a.fm[i]>=10)w+=1.5;
-    if(D.set.tail){ const t=i%10; if(a.tailF[t]>=3)w+=1; if(a.tailF[t]===0)w-=0.5; }
+    if(a.fc[i]>0)w+=(a.fc[i]/maxF)*2.5;
+    if(a.fm[i]>=15)w+=3;
+    else if(a.fm[i]>=10)w+=1.5;
+    if(D.set.tail){
+      const t=i%10;
+      if(a.tailF[t]>=3)w+=1;
+      if(a.tailF[t]===0)w-=0.5;
+    }
     pool.push({n:i,w});
   }
-  const res=[],used=new Set();
+  pool.sort((x,y)=>y.w-x.w);
+  const res=[];const used=new Set();
   while(res.length<count){
-    const tot=pool.reduce((s,p)=>s+p.w,0);
-    let r=Math.random()*tot,sel=pool[0];
-    for(const p of pool){ r-=p.w; if(r<=0){sel=p;break;} }
-    if(!used.has(sel.n)){ used.add(sel.n); res.push(sel.n); }
+    const sel=weightedPick(pool);
+    if(!used.has(sel)){used.add(sel);res.push(sel)}
     if(res.length>200)break;
   }
   return res.sort((x,y)=>x-y);
 }
+
+// combo 后区
 function pickBack(a,type){
-  const B=MAX[type].b; let pool=[];
+  const B=MAX[type].b;
+  let pool=[];
+  const maxB=Math.max(...Object.values(a.bc))||1;
   for(let i=1;i<=B;i++){
     let w=1;
-    if(a.bc[i]>0)w+=(a.bc[i]/Math.max(1,...Object.values(a.bc)))*2;
+    if(a.bc[i]>0)w+=(a.bc[i]/maxB)*2;
     if(a.bm[i]>=10)w+=1.5;
-    if(D.set.tail){ const t=i%10; if(a.tailB[t]>=2)w+=0.5; }
+    if(D.set.tail){const t=i%10;if(a.tailB[t]>=2)w+=0.5}
     pool.push({n:i,w});
   }
-  const res=[],used=new Set();
-  while(res.length<MAX[type].bn){
-    const tot=pool.reduce((s,p)=>s+p.w,0);
-    let r=Math.random()*tot,sel=pool[0];
-    for(const p of pool){ r-=p.w; if(r<=0){sel=p;break;} }
-    if(!used.has(sel.n)){ used.add(sel.n); res.push(sel.n); }
+  const n=MAX[type].bn;
+  const res=[];const used=new Set();
+  while(res.length<n){
+    const sel=weightedPick(pool);
+    if(!used.has(sel)){used.add(sel);res.push(sel)}
   }
   return res.sort((x,y)=>x-y);
 }
-function pickDigit(a,type){
-  const cfg=MAX[type], res=[];
-  for(let p=0;p<cfg.digits;p++){
-    let pool=[];
-    if(a.kind==='digit' && a.posStats && a.posStats[p]){
-      const stats=a.posStats[p];
-      const maxF=Math.max(1,...Object.values(stats).map(s=>s.f));
-      for(let d=0;d<cfg.range;d++){
-        let w=1;
-        if(stats[d].f>0)w+=(stats[d].f/maxF)*2.5;
-        if(stats[d].miss>=10)w+=2; else if(stats[d].miss>=6)w+=1;
-        pool.push({n:d,w});
-      }
-    } else {
-      for(let d=0;d<cfg.range;d++)pool.push({n:d,w:1});
-    }
-    const tot=pool.reduce((s,x)=>s+x.w,0);
-    let r=Math.random()*tot,sel=pool[0];
-    for(const x of pool){ r-=x.w; if(r<=0){sel=x;break;} }
-    res.push(sel.n);
+
+// digit 单位置
+function pickDigit(posF,max){
+  let pool=[];
+  for(let d=0;d<=max;d++){
+    let w=1;
+    const cnt=posF[d]||0;
+    if(cnt>0)w+=cnt*0.6;
+    pool.push({n:d,w});
   }
-  return res;
+  return weightedPick(pool);
 }
 
 function validate(front,type){
@@ -302,68 +270,73 @@ function validate(front,type){
   const odd=front.filter(n=>n%2).length;
   if(odd===0||odd===front.length)return false;
   const zones=type==='dlt'?[0,0,0,0]:[0,0,0];
-  if(type==='dlt')front.forEach(n=>{zones[Math.min(3,Math.floor((n-1)/9))]++;});
-  else front.forEach(n=>{});
-  if(type==='ssq')front.forEach(n=>{zones[Math.min(2,Math.floor((n-1)/11))]++;});
+  if(type==='dlt')front.forEach(n=>{zones[Math.min(3,Math.floor((n-1)/9))]++});
+  else front.forEach(n=>{zones[Math.min(2,Math.floor((n-1)/11))]++});
   if(zones.includes(0))return false;
   const span=Math.max(...front)-Math.min(...front);
   if(type==='dlt'&&(span<15||span>30))return false;
-  if(type==='ssq'&&(span<8||span>28))return false;
   return true;
 }
+
 function validateDigit(nums,type){
-  const sum=nums.reduce((a,b)=>a+b,0);
-  if(type==='p3'&&(sum<6||sum>21))return false;
-  if(type==='p5'&&(sum<12||sum>33))return false;
-  const span=Math.max(...nums)-Math.min(...nums);
-  if(span<1)return false;
+  if(nums.every(n=>n===nums[0]))return false;
   const odd=nums.filter(n=>n%2).length;
   if(odd===0||odd===nums.length)return false;
+  const sum=nums.reduce((a,b)=>a+b,0);
+  if(type==='p3'&&(sum<2||sum>25))return false;
+  if(type==='p5'&&(sum<5||sum>40))return false;
   return true;
+}
+
+function genDigit(a,type){
+  const cfg=MAX[type];
+  let tries=0,result=[];
+  while(result.length<5&&tries<500){
+    tries++;
+    const nums=[];
+    for(let i=0;i<cfg.digits;i++)nums.push(pickDigit(a.posF[i],cfg.max));
+    if(validateDigit(nums,type)){
+      result.push({nums:nums.slice(),time:new Date().toLocaleString(),issue:''});
+    }
+  }
+  return result;
 }
 
 function gen(){
-  const type=$('gType').value, cfg=MAX[type];
-  $('genStatus').style.display='block';
-  setTimeout(()=>{
-    const a=analyze(type);
-    let tries=0,result=[];
-    while(result.length<5 && tries<400){
+  const type=$('gType').value;
+  const a=analyze(type);
+  let result=[];
+  if(MAX[type].kind==='digit'){
+    result=genDigit(a,type);
+  }else{
+    let tries=0;
+    while(result.length<5&&tries<500){
       tries++;
-      let nums,back=[];
-      if(cfg.kind==='combo'){
-        nums=pick(a,type,cfg.fn);
-        back=pickBack(a,type);
-        if(!validate(nums,type))continue;
-      } else {
-        nums=pickDigit(a,type);
-        if(!validateDigit(nums,type))continue;
+      const front=pick(a,type,MAX[type].fn);
+      const back=pickBack(a,type);
+      if(validate(front,type)){
+        result.push({front,back,time:new Date().toLocaleString(),issue:''});
       }
-      result.push({nums,back,time:new Date().toLocaleString(),issue:''});
     }
-    D.cur[type]={list:result,time:new Date().toLocaleString()};
-    save();
-    renderGen(result,type);
-    $('genStatus').style.display='none';
-    $('bConf').classList.remove('hidden');
-    $('bReg').classList.remove('hidden');
-  },60);
+  }
+  D.cur[type]={list:result,time:new Date().toLocaleString()};
+  save();
+  renderGen(result,type);
+  $('bConf').classList.remove('hidden');
+  $('bReg').classList.remove('hidden');
 }
 
 function renderGen(list,type){
-  const cfg=MAX[type];
-  let h='<table><tr><th>注</th>';
-  if(cfg.kind==='combo')h+='<th>前区/红球</th><th>后区/蓝球</th>';
-  else h+='<th>'+cfg.name+'号码</th>';
-  h+='</tr>';
+  if(MAX[type].kind==='digit'){
+    let h=`<table><tr><th>注</th><th>号码</th></tr>`;
+    list.forEach((r,i)=>{ h+=`<tr><td>${i+1}</td><td class="red">${r.nums.join(' ')}</td></tr>`; });
+    h+='</table>';
+    $('genOut').innerHTML=h;
+    return;
+  }
+  let h=`<table><tr><th>注</th><th>前区/红球</th><th>后区/蓝球</th></tr>`;
   list.forEach((r,i)=>{
-    h+='<tr><td>'+(i+1)+'</td>';
-    if(cfg.kind==='combo'){
-      h+='<td class="red">'+r.nums.join(' ')+'</td><td class="blue">'+r.back.join(' ')+'</td>';
-    } else {
-      h+='<td class="red">'+r.nums.join(' ')+'</td>';
-    }
-    h+='</tr>';
+    h+=`<tr><td>${i+1}</td><td class="red">${r.front.join(' ')}</td><td class="blue">${r.back.join(' ')}</td></tr>`;
   });
   h+='</table>';
   $('genOut').innerHTML=h;
@@ -371,33 +344,34 @@ function renderGen(list,type){
 
 function conf(){
   const type=$('gType').value;
-  if(D.lock[type]){alert('已锁定，请先解锁');return;}
-  if(!D.cur[type]){alert('请先生成');return;}
-  D.cur[type].confirmed=true; save(); alert('✅ 已保存'); renderMy();
+  if(D.lock[type]){alert('已锁定，请先解锁');return}
+  if(!D.cur[type]){alert('请先生成');return}
+  D.cur[type].confirmed=true;
+  save();
+  alert('✅ 已保存');
+  renderMy();
 }
-function lock(){const t=$('gType').value;D.lock[t]=true;save();$('bUnl').classList.remove('hidden');alert('🔒 已锁定');}
-function unlock(){const t=$('gType').value;D.lock[t]=false;save();$('bUnl').classList.add('hidden');alert('🔓 已解锁');}
+
+function lock(){const t=$('gType').value;D.lock[t]=true;save();$('bUnl').classList.remove('hidden');alert('🔒 已锁定')}
+function unlock(){const t=$('gType').value;D.lock[t]=false;save();$('bUnl').classList.add('hidden');alert('🔓 已解锁')}
 
 function renderMy(){
   let h='';
   ['dlt','ssq','p3','p5'].forEach(t=>{
-    const cfg=MAX[t];
     if(D.cur[t]){
-      h+='<h4>'+cfg.name+(D.lock[t]?' 🔒':'')+'</h4>';
-      h+='<p class="note">生成时间：'+D.cur[t].time+'</p>';
+      h+=`<h4>${NAMES[t]} ${D.lock[t]?'🔒':''}</h4>`;
+      h+=`<p style="font-size:11px;color:var(--mut)">生成时间：${D.cur[t].time}</p>`;
       D.cur[t].list.forEach((r,i)=>{
-        const backStr=cfg.kind==='combo'?(' <span class="blue">+ '+r.back.join(' ')+'</span>'):'';
-        h+='<p>'+(i+1)+'. <span class="red">'+r.nums.join(' ')+'</span>'+backStr+'</p>';
+        const nums=r.nums||r.front;
+        h+=`<p>${i+1}. <span class="red">${nums.join(' ')}</span></p>`;
       });
     }
   });
-  if(!h)h='<p class="note">暂无推荐，请先生成</p>';
+  if(!h)h='<p style="color:var(--mut)">暂无推荐，请先生成</p>';
   $('myOut').innerHTML=h;
 }
 
 function shot(){
-  if(window.__noCanvas){alert('截图组件未加载，请手动截图');return;}
-  if(typeof html2canvas!=='function'){alert('截图组件未加载，请手动截图');return;}
   html2canvas($('myOut')).then(c=>{
     const a=document.createElement('a');
     a.href=c.toDataURL('image/png');
@@ -406,156 +380,169 @@ function shot(){
   }).catch(()=>alert('截图失败，请手动截图'));
 }
 
-// ==================== 导入 ====================
+// ===== 导入 =====
 function impText(){
-  const type=$('iType').value, cfg=MAX[type];
+  const type=$('iType').value;
+  const cfg=MAX[type];
   const lines=$('iText').value.trim().split('\n');
   let cnt=0;
   lines.forEach(line=>{
-    const parts=line.trim().split(/\s+/).filter(x=>x!=='');
-    if(cfg.kind==='combo'){
-      const nums=parts.filter(x=>/^\d+$/.test(x)).map(Number);
-      if(nums.length>=cfg.fn){
-        D.hist[type].push({issue:'',nums:nums.slice(0,cfg.fn),back:nums.slice(cfg.fn,cfg.fn+cfg.bn)});
-        cnt++;
-      }
-    } else {
-      let digits='';
-      parts.forEach(p=>{digits+=p.replace(/\D/g,'');});
-      if(digits.length>=cfg.digits){
-        D.hist[type].push({issue:'',nums:digits.slice(0,cfg.digits).split('').map(Number)});
-        cnt++;
+    if(cfg.kind==='digit'){
+      const digits=[];
+      line.trim().split(/\s+/).forEach(tok=>{
+        if(/^\d+$/.test(tok)){
+          if(tok.length===cfg.digits)tok.split('').forEach(d=>digits.push(parseInt(d)));
+          else if(tok.length===1)digits.push(parseInt(tok));
+        }
+      });
+      if(digits.length===cfg.digits){D.hist[type].push({issue:'',nums:digits});cnt++;}
+    }else{
+      const parts=line.trim().split(/\s+|\+|\|/).filter(x=>/^\d+$/.test(x));
+      if(parts.length>=cfg.fn){
+        const front=parts.slice(0,cfg.fn).map(Number);
+        const back=parts.slice(cfg.fn,cfg.fn+cfg.bn).map(Number);
+        D.hist[type].push({issue:'',front,back});cnt++;
       }
     }
   });
-  trimHist(type);
-  save(); alert('导入成功 '+cnt+' 期'); renderStat();
-}
-function impFile(){
-  const type=$('iType').value, cfg=MAX[type];
-  const f=$('iFile').files[0];
-  if(!f){return;}
-  const ext=f.name.split('.').pop().toLowerCase();
-  const reader=new FileReader();
-  if(['txt','csv','tsv'].includes(ext)){
-    reader.onload=e=>{$('iText').value=e.target.result;impText();};
-    reader.readAsText(f); return;
-  }
-  if(['xls','xlsx'].includes(ext)){
-    if(window.__noXlsx){alert('Excel 组件未加载，请用 txt/csv 格式导入');return;}
-    reader.onload=e=>{
-      try{
-        const wb=XLSX.read(e.target.result,{type:'array'});
-        const ws=wb.Sheets[wb.SheetNames[0]];
-        const rows=XLSX.utils.sheet_to_json(ws,{header:1});
-        let cnt=0;
-        rows.forEach(row=>{
-          if(cfg.kind==='combo'){
-            const nums=row.filter(c=>c!==null&&c!=='').map(c=>parseInt(c)).filter(n=>!isNaN(n));
-            if(nums.length>=cfg.fn){D.hist[type].push({issue:'',nums:nums.slice(0,cfg.fn),back:nums.slice(cfg.fn,cfg.fn+cfg.bn)});cnt++;}
-          } else {
-            let digits='';
-            row.forEach(c=>{if(c!==null&&c!=='')digits+=String(c).replace(/\D/g,'');});
-            if(digits.length>=cfg.digits){D.hist[type].push({issue:'',nums:digits.slice(0,cfg.digits).split('').map(Number)});cnt++;}
-          }
-        });
-        trimHist(type); save(); alert('导入 '+cnt+' 期'); renderStat();
-      }catch(err){alert('Excel 解析失败，请检查格式');}
-    };
-    reader.readAsArrayBuffer(f); return;
-  }
-  alert('不支持的文件类型：'+ext);
-}
-function trimHist(type){
-  if(D.hist[type].length>50) D.hist[type]=D.hist[type].slice(-50);
+  save();
+  alert(`导入成功 ${cnt} 期`);
+  renderStat();
 }
 
-// ==================== 核对 ====================
+function impFile(){
+  const type=$('iType').value;
+  const cfg=MAX[type];
+  const f=$('iFile').files[0];
+  if(!f)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const wb=XLSX.read(e.target.result,{type:'array'});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const rows=XLSX.utils.sheet_to_json(ws,{header:1});
+      let cnt=0;
+      rows.forEach(row=>{
+        if(cfg.kind==='digit'){
+          const nums=row.filter(c=>c!==null&&c!=='').map(c=>parseInt(c)).filter(n=>!isNaN(n)&&n>=0&&n<=cfg.max);
+          if(nums.length===cfg.digits){D.hist[type].push({issue:'',nums});cnt++;}
+        }else{
+          const nums=row.filter(c=>c!==null&&c!=='').map(c=>parseInt(c)).filter(n=>!isNaN(n));
+          if(nums.length>=cfg.fn){D.hist[type].push({issue:'',front:nums.slice(0,cfg.fn),back:nums.slice(cfg.fn,cfg.fn+cfg.bn)});cnt++;}
+        }
+      });
+      save();alert(`导入 ${cnt} 期`);
+    }catch(err){alert('解析失败，请检查格式')}
+  };
+  reader.readAsArrayBuffer(f);
+}
+
+// ===== 核对 =====
 function chk(){
-  const type=$('cType').value, cfg=MAX[type];
+  const type=$('cType').value;
   const issue=$('cIssue').value;
-  let openNums=[],openBack=[];
-  if(cfg.kind==='combo'){
-    openNums=$('cFront').value.trim().split(/\s+/).map(Number);
-    openBack=$('cBack').value.trim().split(/\s+/).map(Number);
-  } else {
-    const raw=$('cFront').value.replace(/\D/g,'');
-    openNums=raw.slice(0,cfg.digits).split('').map(Number);
-  }
-  if(!D.cur[type]){alert('请先生成推荐');return;}
-  let h='<table><tr><th>注</th><th>命中</th><th>结果</th></tr>';
-  D.cur[type].list.forEach((r,i)=>{
-    if(cfg.kind==='combo'){
-      const hf=r.nums.filter(n=>openNums.includes(n)).length;
-      const hb=(r.back||[]).filter(n=>openBack.includes(n)).length;
+  if(MAX[type].kind==='digit'){
+    const nums=$('cFront').value.trim().split(/\s+/).map(Number).filter(n=>!isNaN(n));
+    if(nums.length!==MAX[type].digits){alert('请输入'+MAX[type].digits+'位数字');return}
+    if(!D.cur[type]){alert('请先生成推荐');return}
+    let h='<table><tr><th>注</th><th>直选命中</th><th>组选命中</th><th>结果</th></tr>';
+    D.cur[type].list.forEach((r,i)=>{
+      const rn=r.nums;
+      const direct=rn.every((n,idx)=>n===nums[idx])?1:0;
+      const box=([...rn].sort().join(',')===[...nums].sort().join(','))?1:0;
       let lvl='未中奖';
-      if(type==='dlt'){
-        if(hf===5&&hb===2)lvl='一等奖';
-        else if(hf===5&&hb===1)lvl='二等奖';
-        else if(hf===5)lvl='三等奖';
-        else if(hf===4&&hb===2)lvl='四等奖';
-        else if(hf===4&&hb===1||hf===3&&hb===2)lvl='五等奖';
-        else if(hf===4||hf===3&&hb===1||hf===2&&hb===2)lvl='六等奖';
-        else if(hf===3||hf===1&&hb===2||hb===2)lvl='八等奖';
-        else if(hf===2&&hb===1||hb===1)lvl='九等奖';
-      } else {
-        if(hf===6&&hb===1)lvl='一等奖';
-        else if(hf===6)lvl='二等奖';
-        else if(hf===5&&hb===1)lvl='三等奖';
-        else if(hf===5||hf===4&&hb===1)lvl='四等奖';
-        else if(hf===4||hf===3&&hb===1)lvl='五等奖';
-        else if(hf===2&&hb===1||hf===1&&hb===1||hb===1)lvl='六等奖';
-      }
-      h+='<tr><td>'+(i+1)+'</td><td class="red">'+hf+'</td><td class="blue">'+hb+'</td><td>'+lvl+'</td></tr>';
-    } else {
-      let hit=0;
-      for(let p=0;p<cfg.digits;p++){ if(r.nums[p]===openNums[p])hit++; }
-      let lvl=hit===cfg.digits?'直选中奖':'未中奖';
-      if(hit<cfg.digits && type==='p3'){
-        const same=JSON.stringify([...r.nums].sort())===JSON.stringify([...openNums].sort());
-        if(same)lvl='组选中奖';
-      }
-      h+='<tr><td>'+(i+1)+'</td><td>'+hit+'/'+cfg.digits+'</td><td>'+lvl+'</td></tr>';
+      if(direct)lvl='直选中奖';
+      else if(type==='p3'&&box)lvl='组选中奖';
+      h+=`<tr><td>${i+1}</td><td>${direct}</td><td>${box}</td><td>${lvl}</td></tr>`;
+    });
+    h+='</table>';
+    $('chkOut').innerHTML=h;
+    if(D.set.auto){D.hist[type].push({issue,nums});save();alert('已自动加入历史记录');renderStat();}
+    else if(confirm('是否加入历史记录？')){D.hist[type].push({issue,nums});save();renderStat();}
+    return;
+  }
+  // combo
+  const front=$('cFront').value.trim().split(/\s+/).map(Number);
+  const back=$('cBack').value.trim().split(/\s+/).map(Number);
+  if(!D.cur[type]){alert('请先生成推荐');return}
+  let h='<table><tr><th>注</th><th>命中前区</th><th>命中后区</th><th>结果</th></tr>';
+  D.cur[type].list.forEach((r,i)=>{
+    const hf=r.front.filter(n=>front.includes(n)).length;
+    const hb=r.back.filter(n=>back.includes(n)).length;
+    let lvl='未中奖';
+    if(type==='dlt'){
+      if(hf===5&&hb===2)lvl='一等奖';
+      else if(hf===5&&hb===1)lvl='二等奖';
+      else if(hf===5)lvl='三等奖';
+      else if(hf===4&&hb===2)lvl='四等奖';
+      else if(hf===4&&hb===1||hf===3&&hb===2)lvl='五等奖';
+      else if(hf===4||hf===3&&hb===1||hf===2&&hb===2)lvl='六等奖';
+      else if(hf===3||hf===1&&hb===2||hb===2)lvl='八等奖';
+      else if(hf===2&&hb===1||hb===1)lvl='九等奖';
+    }else{
+      if(hf===6&&hb===1)lvl='一等奖';
+      else if(hf===6)lvl='二等奖';
+      else if(hf===5&&hb===1)lvl='三等奖';
+      else if(hf===5||hf===4&&hb===1)lvl='四等奖';
+      else if(hf===4||hf===3&&hb===1)lvl='五等奖';
+      else if(hf===2&&hb===1||hf===1&&hb===1||hb===1)lvl='六等奖';
     }
+    h+=`<tr><td>${i+1}</td><td class="red">${hf}</td><td class="blue">${hb}</td><td>${lvl}</td></tr>`;
   });
   h+='</table>';
   $('chkOut').innerHTML=h;
-  const rec=cfg.kind==='combo'?{issue,nums:openNums,back:openBack}:{issue,nums:openNums};
-  if(D.set.auto){D.hist[type].push(rec);trimHist(type);save();alert('已自动加入历史记录');renderStat();}
-  else if(confirm('是否加入历史记录？')){D.hist[type].push(rec);trimHist(type);save();renderStat();}
+  if(D.set.auto){
+    D.hist[type].push({issue,front,back});
+    save();
+    alert('已自动加入历史记录');
+    renderStat();
+  }else{
+    if(confirm('是否加入历史记录？')){
+      D.hist[type].push({issue,front,back});
+      save();renderStat();
+    }
+  }
 }
 
-// ==================== 统计 ====================
+function updChk(){
+  const t=$('cType').value;
+  if(MAX[t].kind==='digit'){
+    $('cFront').placeholder='开奖号码，如 1 2 3';
+    $('cBack').style.display='none';
+  }else{
+    $('cFront').placeholder='前区/红球，空格分隔';
+    $('cBack').style.display='block';
+  }
+}
+
+// ===== 统计 =====
 function renderStat(){
   const d=D.hist.dlt.length,s=D.hist.ssq.length,p3=D.hist.p3.length,p5=D.hist.p5.length;
-  $('stat').innerHTML='大乐透：<b>'+d+'</b>期 | 双色球：<b>'+s+'</b>期<br>排列三：<b>'+p3+'</b>期 | 排列五：<b>'+p5+'</b>期<br><span style="color:var(--mut)">每种建议各导入 30–50 期</span>';
+  $('stat').innerHTML=`大乐透历史：<b>${d}</b> 期<br>双色球历史：<b>${s}</b> 期<br>排列三历史：<b>${p3}</b> 期<br>排列五历史：<b>${p5}</b> 期<br><span style="color:var(--mut);font-size:11px">建议各导入≥50期以获得准确分析</span>`;
 }
 
-// ==================== 数据 ====================
+// ===== 数据 =====
 function exp(){
   const a=document.createElement('a');
   a.href='data:text/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(D));
   a.download='选号助手备份.json';
   a.click();
 }
-function impData(e){
-  const f=e.target.files[0]; if(!f)return;
-  const r=new FileReader();
-  r.onload=ev=>{try{D=JSON.parse(ev.target.result);save();alert('恢复成功');renderStat();renderMy();}catch(x){alert('文件错误');}};
-  r.readAsText(f);
+function impData(){
+  $('iData').click();
+  $('iData').onchange=e=>{
+    const f=e.target.files[0];if(!f)return;
+    const r=new FileReader();
+    r.onload=ev=>{try{D=JSON.parse(ev.target.result);save();alert('恢复成功');renderStat();renderMy()}catch(x){alert('文件错误')}};
+    r.readAsText(f);
+  };
 }
-function clr(){if(confirm('确定清除全部数据？')){localStorage.removeItem('lottoApp');location.reload();}}
+function clr(){if(confirm('确定清除全部数据？')){localStorage.removeItem('lottoApp');location.reload()}}
 
-function initUI(){
-  $('sTail').checked=D.set.tail;
-  $('sAuto').checked=D.set.auto;
-  $('sTail').onchange=()=>{D.set.tail=$('sTail').checked;save();};
-  $('sAuto').onchange=()=>{D.set.auto=$('sAuto').checked;save();};
-  onImpType(); onChkType(); renderStat();
-}
-
-// 页面加载即初始化（已移除密码）
-initUI();
+// 初始化
+if(D.set)D.set={tail:$('sTail').checked,auto:$('sAuto').checked};
+updChk();
+renderStat();
 </script>
 </body>
 </html>
