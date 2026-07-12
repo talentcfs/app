@@ -9,17 +9,23 @@
 <style>
 :root{--bg:#0f172a;--card:#1e293b;--pri:#3b82f6;--dan:#ef4444;--suc:#22c55e;--txt:#f1f5f9;--mut:#94a3b8}
 *{box-sizing:border-box}
-body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;background:var(--bg);color:var(--txt);padding-bottom:70px}
-.container{max-width:480px;margin:0 auto;padding:14px}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;background:var(--bg);color:var(--txt)}
+.tab-bar{position:fixed;bottom:0;left:0;right:0;display:flex;background:var(--card);border-top:1px solid #334155;z-index:200;box-shadow:0 -2px 8px rgba(0,0,0,.35)}
+.tab-bar button{flex:1;padding:12px 2px;border:none;background:none;color:var(--mut);font-size:12px;font-weight:600}
+.tab-bar button.on{color:var(--pri);border-top:2px solid var(--pri)}
+.container{max-width:480px;margin:0 auto;padding:14px 14px 80px}
 h1,h2,h3{text-align:center;margin:10px 0}
 .card{background:var(--card);border-radius:12px;padding:12px;margin-bottom:12px}
-input,select,button,textarea{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:1px solid #475569;background:#0f172a;color:#fff;font-size:14px}
+input,button,textarea{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:1px solid #475569;background:#0f172a;color:#fff;font-size:14px}
 button{background:var(--pri);cursor:pointer;border:none;font-weight:600}
 button.dan{background:var(--dan)}button.suc{background:var(--suc)}
 table{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px}
 th,td{border:1px solid #475569;padding:5px;text-align:center}
 .red{color:#f87171}.blue{color:#60a5fa}.hot{color:#fbbf24}.miss{color:#34d399}
 .hidden{display:none}
+.seg{display:flex;gap:6px;margin:8px 0;flex-wrap:wrap}
+.seg button{flex:1;min-width:64px;padding:9px 4px;margin:0;background:#0f172a;border:1px solid #475569;color:var(--mut);font-size:13px;border-radius:8px;font-weight:600}
+.seg button.on{background:var(--pri);color:#fff;border-color:var(--pri)}
 .tag{display:inline-block;background:#334155;border-radius:6px;padding:2px 8px;margin:2px;font-size:11px}
 </style>
 </head>
@@ -36,8 +42,24 @@ th,td{border:1px solid #475569;padding:5px;text-align:center}
 <button onclick="go('gen')">生成推荐</button>
 <button onclick="go('imp')">批量导入</button>
 <button onclick="go('chk')">开奖核对</button>
+<button onclick="go('ana')">数据分析</button>
 <button onclick="go('my')">我的推荐</button>
 <button onclick="go('set')">设置</button>
+</div>
+</div>
+
+<!-- 分析 -->
+<div id="t-ana" class="hidden">
+<div class="card">
+<h3>📊 数据分析</h3>
+<div class="seg" id="aSeg">
+  <button class="on" data-v="dlt" onclick="pickType('ana','dlt')">大乐透</button>
+  <button data-v="ssq" onclick="pickType('ana','ssq')">双色球</button>
+  <button data-v="p3" onclick="pickType('ana','p3')">排列三</button>
+  <button data-v="p5" onclick="pickType('ana','p5')">排列五</button>
+</div>
+<button onclick="showAna()">🔍 查看分析</button>
+<div id="anaOut"></div>
 </div>
 </div>
 
@@ -45,12 +67,12 @@ th,td{border:1px solid #475569;padding:5px;text-align:center}
 <div id="t-gen" class="hidden">
 <div class="card">
 <h3>🎲 生成推荐</h3>
-<select id="gType">
-  <option value="dlt">大乐透</option>
-  <option value="ssq">双色球</option>
-  <option value="p3">排列三</option>
-  <option value="p5">排列五</option>
-</select>
+<div class="seg" id="gSeg">
+  <button class="on" data-v="dlt" onclick="pickType('gen','dlt')">大乐透</button>
+  <button data-v="ssq" onclick="pickType('gen','ssq')">双色球</button>
+  <button data-v="p3" onclick="pickType('gen','p3')">排列三</button>
+  <button data-v="p5" onclick="pickType('gen','p5')">排列五</button>
+</div>
 <button onclick="gen()">🎰 生成 5 注</button>
 <div id="genOut"></div>
 <button class="suc hidden" id="bConf" onclick="conf()">✅ 确认保存这 5 注</button>
@@ -75,12 +97,12 @@ th,td{border:1px solid #475569;padding:5px;text-align:center}
 <div id="t-imp" class="hidden">
 <div class="card">
 <h3>📥 批量导入 50 期</h3>
-<select id="iType">
-  <option value="dlt">大乐透</option>
-  <option value="ssq">双色球</option>
-  <option value="p3">排列三</option>
-  <option value="p5">排列五</option>
-</select>
+<div class="seg" id="iSeg">
+  <button class="on" data-v="dlt" onclick="pickType('imp','dlt')">大乐透</button>
+  <button data-v="ssq" onclick="pickType('imp','ssq')">双色球</button>
+  <button data-v="p3" onclick="pickType('imp','p3')">排列三</button>
+  <button data-v="p5" onclick="pickType('imp','p5')">排列五</button>
+</div>
 <p style="font-size:12px;color:var(--mut)">
 大乐透/双色球：每行一期，例<br>24001 01 02 03 04 05 + 06 07<br>
 排列三/五：每行一期，例<br>24001 123 &nbsp;或&nbsp; 24001 1 2 3
@@ -95,12 +117,12 @@ th,td{border:1px solid #475569;padding:5px;text-align:center}
 <div id="t-chk" class="hidden">
 <div class="card">
 <h3>🔍 开奖核对</h3>
-<select id="cType" onchange="updChk()">
-  <option value="dlt">大乐透</option>
-  <option value="ssq">双色球</option>
-  <option value="p3">排列三</option>
-  <option value="p5">排列五</option>
-</select>
+<div class="seg" id="cSeg">
+  <button class="on" data-v="dlt" onclick="pickType('chk','dlt')">大乐透</button>
+  <button data-v="ssq" onclick="pickType('chk','ssq')">双色球</button>
+  <button data-v="p3" onclick="pickType('chk','p3')">排列三</button>
+  <button data-v="p5" onclick="pickType('chk','p5')">排列五</button>
+</div>
 <input id="cIssue" placeholder="期号，如 24050">
 <input id="cFront" placeholder="前区/红球，空格分隔">
 <input id="cBack" placeholder="后区/蓝球，空格分隔">
@@ -125,11 +147,12 @@ th,td{border:1px solid #475569;padding:5px;text-align:center}
 
 </div>
 
-<div class="tab-bar">
-<button class="on" data-t="home" onclick="go('home')">🏠 首页</button>
-<button data-t="gen" onclick="go('gen')">🎲 生成</button>
-<button data-t="my" onclick="go('my')">📋 我的</button>
-<button data-t="set" onclick="go('set')">⚙️ 设置</button>
+<div class="tab-bar" id="tabbar">
+  <button class="on" data-t="home" onclick="go('home')">🏠 首页</button>
+  <button data-t="ana" onclick="go('ana')">📊 分析</button>
+  <button data-t="gen" onclick="go('gen')">🎲 生成</button>
+  <button data-t="my" onclick="go('my')">📋 我的</button>
+  <button data-t="set" onclick="go('set')">⚙️ 设置</button>
 </div>
 
 <script>
@@ -139,6 +162,9 @@ const MAX={
   p3:{kind:'digit',digits:3,max:9},
   p5:{kind:'digit',digits:5,max:9}
 };
+
+// 各页面当前选中的彩票类型（横向按钮点击切换）
+const sel={gen:'dlt',imp:'dlt',chk:'dlt',ana:'dlt'};
 
 let D=load();
 if(!D)D={};
@@ -154,12 +180,20 @@ function load(){try{return JSON.parse(localStorage.getItem('lottoApp'))}catch(e)
 function save(){localStorage.setItem('lottoApp',JSON.stringify(D))}
 
 function go(t){
-  ['home','gen','my','imp','chk','set'].forEach(x=>$('t-'+x).classList.add('hidden'));
+  ['home','ana','gen','my','imp','chk','set'].forEach(x=>$('t-'+x).classList.add('hidden'));
   $('t-'+t).classList.remove('hidden');
   document.querySelectorAll('.tab-bar button').forEach(b=>b.classList.remove('on'));
   document.querySelector(`.tab-bar button[data-t="${t==='imp'?'gen':t==='chk'?'gen':t}"]`)?.classList.add('on');
   if(t==='home')renderStat();
   if(t==='my')renderMy();
+}
+
+// 横向类型按钮切换
+function pickType(page,type){
+  sel[page]=type;
+  document.querySelectorAll('#'+page+'Seg button').forEach(b=>b.classList.remove('on'));
+  document.querySelector('#'+page+'Seg button[data-v="'+type+'"]').classList.add('on');
+  if(page==='chk')updChk();
 }
 
 // ===== 分析引擎 =====
@@ -303,7 +337,7 @@ function genDigit(a,type){
 }
 
 function gen(){
-  const type=$('gType').value;
+  const type=sel.gen;
   const a=analyze(type);
   let result=[];
   if(MAX[type].kind==='digit'){
@@ -342,8 +376,36 @@ function renderGen(list,type){
   $('genOut').innerHTML=h;
 }
 
+// ===== 分析页展示 =====
+function showAna(){
+  const type=sel.ana;
+  const a=analyze(type);
+  if(MAX[type].kind==='digit'){
+    let h='<h4>各位置热号（0-9 出现次数，近50期）</h4>';
+    const posName=['百位','十位','个位'];
+    a.posF.forEach((m,i)=>{
+      const sorted=Object.entries(m).sort((x,y)=>y[1]-x[1]);
+      const label=type==='p3'?posName[i]:('第'+(i+1)+'位');
+      h+='<p class="hot">'+label+'：'+sorted.map(e=>e[0]+'('+e[1]+')').join(' ')+'</p>';
+    });
+    h+='<p style="font-size:11px;color:var(--mut)">共分析 '+a.recs.length+' 期，无数据请先导入</p>';
+    $('anaOut').innerHTML=h;
+    return;
+  }
+  const hotF=Object.entries(a.fc).sort((x,y)=>y[1]-x[1]).slice(0,5).map(e=>e[0]+'('+e[1]+')').join(' ');
+  const hotB=Object.entries(a.bc).sort((x,y)=>y[1]-x[1]).slice(0,2).map(e=>e[0]+'('+e[1]+')').join(' ');
+  const missF=Object.entries(a.fm).filter(e=>e[1]>=10).map(e=>e[0]).join(' ');
+  const tailF=Object.entries(a.tailF).sort((x,y)=>y[1]-x[1]).map(e=>e[0]+'('+e[1]+')').join(' ');
+  let h='<h4>前区热号 Top5</h4><p class="hot">'+hotF+'</p>';
+  h+='<h4>后区热号 Top2</h4><p class="blue">'+hotB+'</p>';
+  h+='<h4>遗漏≥10期</h4><p class="miss">'+(missF||'无')+'</p>';
+  h+='<h4>尾数分布</h4><p>'+tailF+'</p>';
+  h+='<p style="font-size:11px;color:var(--mut)">共分析 '+a.recs.length+' 期，无数据请先导入</p>';
+  $('anaOut').innerHTML=h;
+}
+
 function conf(){
-  const type=$('gType').value;
+  const type=sel.gen;
   if(D.lock[type]){alert('已锁定，请先解锁');return}
   if(!D.cur[type]){alert('请先生成');return}
   D.cur[type].confirmed=true;
@@ -352,8 +414,8 @@ function conf(){
   renderMy();
 }
 
-function lock(){const t=$('gType').value;D.lock[t]=true;save();$('bUnl').classList.remove('hidden');alert('🔒 已锁定')}
-function unlock(){const t=$('gType').value;D.lock[t]=false;save();$('bUnl').classList.add('hidden');alert('🔓 已解锁')}
+function lock(){const t=sel.gen;D.lock[t]=true;save();$('bUnl').classList.remove('hidden');alert('🔒 已锁定')}
+function unlock(){const t=sel.gen;D.lock[t]=false;save();$('bUnl').classList.add('hidden');alert('🔓 已解锁')}
 
 function renderMy(){
   let h='';
@@ -363,7 +425,8 @@ function renderMy(){
       h+=`<p style="font-size:11px;color:var(--mut)">生成时间：${D.cur[t].time}</p>`;
       D.cur[t].list.forEach((r,i)=>{
         const nums=r.nums||r.front;
-        h+=`<p>${i+1}. <span class="red">${nums.join(' ')}</span></p>`;
+        const back=r.back?(' + <span class="blue">'+r.back.join(' ')+'</span>'):'';
+        h+=`<p>${i+1}. <span class="red">${nums.join(' ')}</span>${back}</p>`;
       });
     }
   });
@@ -382,7 +445,7 @@ function shot(){
 
 // ===== 导入 =====
 function impText(){
-  const type=$('iType').value;
+  const type=sel.imp;
   const cfg=MAX[type];
   const lines=$('iText').value.trim().split('\n');
   let cnt=0;
@@ -411,7 +474,7 @@ function impText(){
 }
 
 function impFile(){
-  const type=$('iType').value;
+  const type=sel.imp;
   const cfg=MAX[type];
   const f=$('iFile').files[0];
   if(!f)return;
@@ -439,7 +502,7 @@ function impFile(){
 
 // ===== 核对 =====
 function chk(){
-  const type=$('cType').value;
+  const type=sel.chk;
   const issue=$('cIssue').value;
   if(MAX[type].kind==='digit'){
     const nums=$('cFront').value.trim().split(/\s+/).map(Number).filter(n=>!isNaN(n));
@@ -505,7 +568,7 @@ function chk(){
 }
 
 function updChk(){
-  const t=$('cType').value;
+  const t=sel.chk;
   if(MAX[t].kind==='digit'){
     $('cFront').placeholder='开奖号码，如 1 2 3';
     $('cBack').style.display='none';
