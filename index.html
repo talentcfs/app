@@ -61,6 +61,7 @@ th,td{border:1px solid #2a3580;padding:6px 4px;text-align:center}
       <button class="sec" onclick="go('imp')">📥 批量导入</button>
       <button class="sec" onclick="go('chk')">🔍 开奖核对</button>
       <button class="sec" onclick="go('my')">📋 我的推荐</button>
+      <button class="sec" onclick="go('pool')">🗄️ 数据池</button>
       <button class="sec" onclick="go('set')">⚙️ 设置</button>
     </div>
   </div>
@@ -143,12 +144,28 @@ th,td{border:1px solid #2a3580;padding:6px 4px;text-align:center}
       <p class="note">数据仅存本地浏览器，建议定期导出备份</p>
     </div>
   </div>
+
+  <div id="t-pool" class="hidden">
+    <div class="card">
+      <h3>🗄️ 数据池</h3>
+      <select id="pType" onchange="renderPool()">
+        <option value="dlt">大乐透</option>
+        <option value="ssq">双色球</option>
+        <option value="p3">排列三</option>
+        <option value="p5">排列五</option>
+      </select>
+      <p id="poolStat" class="note"></p>
+      <div id="poolList"></div>
+      <button class="dan" onclick="clearType()">🗑️ 清空该类型数据</button>
+    </div>
+  </div>
 </div>
 
 <div class="tab-bar">
   <button class="on" onclick="go('home')">🏠<br>首页</button>
   <button onclick="go('gen')">🎲<br>生成</button>
   <button onclick="go('my')">📋<br>我的</button>
+  <button onclick="go('pool')">🗄️<br>数据池</button>
   <button onclick="go('set')">⚙️<br>设置</button>
 </div>
 
@@ -178,13 +195,14 @@ function checkPwd(){
 }
 
 function go(t){
-  ['home','gen','my','imp','chk','set'].forEach(x=>$('t-'+x).classList.add('hidden'));
+  ['home','gen','my','imp','chk','set','pool'].forEach(x=>$('t-'+x).classList.add('hidden'));
   $('t-'+t).classList.remove('hidden');
   document.querySelectorAll('.tab-bar button').forEach(b=>b.classList.remove('on'));
-  const map={home:0,gen:1,my:2,set:3,imp:1,chk:1};
+  const map={home:0,gen:1,my:2,set:3,pool:4,imp:1,chk:1};
   document.querySelectorAll('.tab-bar button')[map[t]].classList.add('on');
   if(t==='home')renderStat();
   if(t==='my')renderMy();
+  if(t==='pool')renderPool();
 }
 
 function onImpType(){
@@ -558,6 +576,34 @@ function chk(){
 function renderStat(){
   const c=t=>`${MAX[t].name}：<b>${D.hist[t].length}</b>期`;
   $('stat').innerHTML=`${c('dlt')} | ${c('ssq')}<br>${c('p3')} | ${c('p5')}<br><span class="note">每种建议各导入 50–60 期</span>`;
+}
+// ==================== 数据池 ====================
+function renderPool(){
+  const t=$('pType').value, arr=D.hist[t]||[], cfg=MAX[t];
+  let h='';
+  if(arr.length===0){
+    h='<p class="note">暂无数据，请先去「批量导入」</p>';
+  } else {
+    if(arr.length>60) h+=`<p class="note" style="color:#ff1744">⚠️ 当前 ${arr.length} 期，超过60期易卡顿，建议保留 30–40 期</p>`;
+    h+='<table><tr><th>#</th><th>期号</th><th>号码</th><th></th></tr>';
+    arr.slice().reverse().forEach((r,i)=>{
+      const idx=arr.length-1-i;
+      const nums=cfg.kind==='combo'
+        ? r.nums.join(' ')+(r.back&&r.back.length?(' + '+r.back.join(' ')):'')
+        : r.nums.join(' ');
+      h+=`<tr><td>${idx+1}</td><td>${r.issue||'-'}</td><td class="red" style="text-align:left">${nums}</td><td><button class="dan" style="padding:4px 8px;font-size:11px;margin:0" onclick="delRec('${t}',${idx})">删</button></td></tr>`;
+    });
+    h+='</table>';
+  }
+  $('poolList').innerHTML=h;
+  $('poolStat').innerHTML=`当前类型：${cfg.name} ｜ 共 <b style="color:var(--pri)">${arr.length}</b> 期`;
+}
+function delRec(t,idx){
+  if(confirm('确定删除这条记录？')){ D.hist[t].splice(idx,1); save(); renderPool(); renderStat(); }
+}
+function clearType(){
+  const t=$('pType').value;
+  if(confirm(`确定清空「${MAX[t].name}」全部 ${D.hist[t].length} 期数据？`)){ D.hist[t]=[]; save(); renderPool(); renderStat(); }
 }
 function exp(){
   const a=document.createElement('a');
